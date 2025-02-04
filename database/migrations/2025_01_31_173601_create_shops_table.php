@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('shop_phone')->nullable();
             $table->string('description')->nullable();
             $table->string('shop_image_url')->nullable();
-            $table->boolean('isOpen')->default(false);
+            $table->boolean('is_open')->default(false);
             $table->char('approve_status')->default('P');
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
