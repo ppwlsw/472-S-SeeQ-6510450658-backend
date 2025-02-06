@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\Auth\AuthenticateController;
 use App\Http\Controllers\API\QueueController;
 use App\Http\Controllers\API\QueueSubscriptionController;
 use App\Http\Controllers\API\ShopController;
@@ -14,37 +15,26 @@ Route::middleware('throttle:api')->group(function () {
             'version' => '1.0.0',
         ];
     });
-
-    // ... Other routes
 });
 
-Route::apiResource('users', UserController::class);
+Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
 
-Route::apiResource('shops', ShopController::class);
+Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
 
 
-Route::get('queues/{queue_id}', [QueueController::class, 'getAllQueues']);
-Route::apiResource('queues', QueueController::class);
+Route::get('queues/{queue_id}', [QueueController::class, 'getAllQueues'])->middleware('auth:sanctum');
+Route::apiResource('queues', QueueController::class)->middleware('auth:sanctum');
 
-Route::post('/queues/{queue_id}/join', [QueueController::class, 'joinQueue']);
-Route::get('queues/{queue_id}/status', [QueueController::class, 'status']);
-Route::post('queues/{queue_id}/cancel', [QueueController::class, 'cancel']);
-Route::post('queues/{queue_id}/next', [QueueController::class, 'next']);
+Route::post('queues/{queue_id}/join', [QueueController::class, 'joinQueue'])->middleware('auth:sanctum');
+Route::get('queues/{queue_id}/status', [QueueController::class, 'status'])->middleware('auth:sanctum');
+Route::post('queues/{queue_id}/cancel', [QueueController::class, 'cancel'])->middleware('auth:sanctum');
+Route::post('queues/{queue_id}/next', [QueueController::class, 'next'])->middleware('auth:sanctum');
 
-Route::get('/subscribe', [QueueSubscriptionController::class, 'subscribe']);
+Route::get('/subscribe', [QueueSubscriptionController::class, 'subscribe'])->middleware('auth:sanctum');
 
-//Route::get('/add-to-queue', function () {
-//    $redis = new Redis();
-//    $redis->connect('redis', 6379); // เชื่อมต่อกับ Redis
-//    $redis->lpush('TableA(5-7)', 7);
-//    return "Added to Redis queue";
-//});
-//
-//Route::get('/get-queue', function () {
-//    $redis = new Redis();
-//    $redis->connect('redis', 6379); // เชื่อมต่อกับ Redis
-//    return $redis->lrange('TableA(5-7)', 0, -1);
-//});
+Route::post('login', [AuthenticateController::class, 'login'])->name('user.login');
+Route::post('register', [AuthenticateController::class, 'register'])->name('user.register');
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();

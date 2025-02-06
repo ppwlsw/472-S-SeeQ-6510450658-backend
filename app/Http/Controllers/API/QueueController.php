@@ -88,7 +88,7 @@ class QueueController extends Controller
 
     public function joinQueue(Request $request, $queue_id)
     {
-        $user_id = "10";
+        $user_id = auth()->id();
         $queue = $this->queueRepository->getById($queue_id);
         if (!$queue){
             return response()->json(["message" => "Queue not found"], 404);
@@ -107,7 +107,7 @@ class QueueController extends Controller
 
     public function status(Request $request, $queue_id)
     {
-        $user_id = "8";
+        $user_id = auth()->id();
         $queue = $this->queueRepository->getById($queue_id);
         if (!$queue){
             return response()->json(["message" => "Queue not found"], 404);
@@ -141,8 +141,7 @@ class QueueController extends Controller
 
     public function cancel(Request $request, $queue_id)
     {
-
-        $user_id = "8";
+        $user_id = auth()->id();
         $queue = $this->queueRepository->getById($queue_id);
         if (!$queue){
             return response()->json(["message" => "Queue not found"], 404);
@@ -171,7 +170,6 @@ class QueueController extends Controller
 
     public function next(Request $request, $queue_id)
     {
-
         $queue = $this->queueRepository->getById($queue_id);
         if (!$queue){
             return response()->json(["message" => "Queue not found"], 404);
