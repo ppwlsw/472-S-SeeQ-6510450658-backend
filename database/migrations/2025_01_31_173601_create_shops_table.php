@@ -16,11 +16,11 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('address')->nullable();
-            $table->string('shop_phone')->nullable();
+            $table->string('phone')->nullable();
             $table->string('description')->nullable();
-            $table->string('shop_image_url')->nullable();
-            $table->boolean('isOpen')->default(false);
-            $table->char('approve_status')->default('P');
+            $table->string('image_url')->nullable();
+            $table->boolean('is_open')->default(false);
+            $table->string('approve_status')->default("P");
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->foreignIdFor(User::class);
