@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CreateShopRequest;
+use App\Http\Requests\UpdateShopRequest;
 use App\Http\Resources\ShopResource;
 use App\Http\Resources\IdShopResource;
 use App\Models\Shop;
@@ -37,7 +39,7 @@ class ShopController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(CreateShopRequest $request)
     {
         Gate::authorize('create', Shop::class);
         $shop = $this->shopRepository->create([
@@ -73,7 +75,7 @@ class ShopController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Shop $shop)
+    public function update(UpdateShopRequest $request, Shop $shop)
     {
         Gate::authorize('update', $shop);
         $shop->update([
