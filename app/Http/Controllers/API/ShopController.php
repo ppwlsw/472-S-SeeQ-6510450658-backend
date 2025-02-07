@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\ShopCollection;
 use App\Http\Resources\ShopResource;
+use App\Http\Resources\IdShopResource;
 use App\Models\Shop;
 use App\Repositories\ShopRepository;
 use Illuminate\Http\Request;
-use function Laravel\Prompts\warning;
+use Illuminate\Support\Facades\Gate;
 
 class ShopController extends Controller
 {
@@ -21,8 +21,9 @@ class ShopController extends Controller
 
     public function index()
     {
+        Gate::authorize('viewAny', Shop::class);
         $shops = $this->shopRepository->getAll();
-        return new ShopCollection($shops);
+        return ShopResource::collection($shops);
     }
 
     /**
@@ -38,27 +39,18 @@ class ShopController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'min:3', 'max:255', 'unique:shops,name'],
-            'address' => ['required', 'min:3', 'max:255'],
-            'shop_phone' => ['required', 'min:3', 'max:255'],
-            'description' => ['required', 'min:3', 'max:255'],
-            'is_open' => ['required', 'boolean'],
-            'approve_status' => ['required', 'boolean'],
-            'user_id' => ['required', 'exists:users,id'],
-        ]);
-
+        Gate::authorize('create', Shop::class);
         $shop = $this->shopRepository->create([
             'name' => $request->get('name'),
             'address' => $request->get('address'),
-            'shop_phone' => $request->get('shop_phone'),
+            'phone' => $request->get('shop_phone'),
             'description' => $request->get('description'),
-            'is_open' => $request->get('is_open'),
-            'approve_status' => $request->get('approve_status'),
-            'user_id' => $request->get('user_id'),
+            'latitude' => $request->get('latitude'),
+            'longitude' => $request->get('longitude'),
+            'image_url' => $request->get('image_url'),
+            'user_id' => auth()->id(),
         ]);
-
-        return new ShopResource($shop);
+        return IdShopResource::make($shop);
     }
 
     /**
@@ -66,7 +58,8 @@ class ShopController extends Controller
      */
     public function show(Shop $shop)
     {
-        return new ShopResource($shop);
+        Gate::authorize('view', Shop::class);
+        return ShopResource::make($shop);
     }
 
     /**
@@ -82,7 +75,20 @@ class ShopController extends Controller
      */
     public function update(Request $request, Shop $shop)
     {
-        //
+        Gate::authorize('update', $shop);
+        $shop->update([
+            'name' => $request->get('name'),
+            'address' => $request->get('address'),
+            'phone' => $request->get('shop_phone'),
+            'description' => $request->get('description'),
+            'image_url' => $request->get('image_url'),
+            'is_open' => $request->get('is_open'),
+            'approve_status' => $request->get('approve_status'),
+            'latitude' => $request->get('latitude'),
+            'longitude' => $request->get('longitude'),
+            'user_id' => auth()->id(),
+        ]);
+        return IdShopResource::make($shop);
     }
 
     /**
@@ -90,6 +96,8 @@ class ShopController extends Controller
      */
     public function destroy(Shop $shop)
     {
-        //
+        Gate::authorize('delete', $shop);
+        $shop->delete();
     }
+
 }
