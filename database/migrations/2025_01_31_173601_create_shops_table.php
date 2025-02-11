@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('address')->nullable();
             $table->string('phone')->nullable();
             $table->string('description')->nullable();
-            $table->string('image_url')->nullable();
+            $table->string('image_uri')->nullable();
             $table->boolean('is_open')->default(false);
             $table->string('approve_status')->default("P");
             $table->decimal('latitude', 10, 7)->nullable();
