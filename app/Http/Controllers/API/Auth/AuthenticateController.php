@@ -5,11 +5,10 @@ namespace App\Http\Controllers\API\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
-use App\Http\Requests\OAuthLoginRequest;
 use App\Repositories\UserRepository;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthenticateController extends Controller
 {
@@ -19,15 +18,23 @@ class AuthenticateController extends Controller
     ) {}
 
     public function login(LoginRequest $request) {
-       return $this->useLoginLogic($request);
+        $email = $request->email;
+        $password = $request->password;
+        $user = $this->userRepository->getByEmail($email);
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found'
+            ])->setStatusCode(404);
+        }
+        if (Hash::check($password, $user->password)) {
+            return response()->json([
+                'token' => $user->createToken('token')->plainTextToken
+            ]);
+        }
+        return response()->json([
+            'message' => 'Invalid credentials'
+        ])->setStatusCode(401);
     }
-
-    public function oAuth(OAuthLoginRequest $request)
-    {
-       return $this->useLoginLogic($request);
-    }
-
-
 
     public function register(RegisterRequest $request) {
         $user = $this->userRepository->create([
@@ -45,30 +52,43 @@ class AuthenticateController extends Controller
             $path = 'user_images/'. $user->id .'/'. $filename;
             Storage::disk('s3')->put($path, file_get_contents($file), 'private');
         }
-        $this->userRepository->update(['image_uri' => $path], $user->id);
+        $user->update([
+            'image_url' => env("APP_URL") . $path
+        ]);
+
         return response()->json([
             'message' => 'User registered successfully',
             'user' => $user
         ], 201);
     }
 
-    private function useLoginLogic(Request $request)
+    public function redirectToGoogle()
     {
-        $email = $request->email;
-        $password = $request->password;
-        $user = $this->userRepository->getByEmail($email);
-        if (!$user) {
-            return response()->json([
-                'message' => 'User not found'
-            ])->setStatusCode(404);
-        }
-        if (Hash::check($password, $user->password)) {
+        return response()->json([
+            'url' => Socialite::driver('google')->stateless()->redirect()->getTargetUrl()
+        ]);
+    }
+
+    public function handleGoogleCallback()
+    {
+        try {
+            $googleUser = Socialite::driver('google')->stateless()->user();
+            $user = $this->userRepository->updateOrCreate(
+                [
+                    'email' => $googleUser->email
+                ],
+                [
+                    'name' => $googleUser->name,
+                    'password' => '',
+                    'image_url' => $googleUser->avatar,
+                    'login_by' => 'google',
+                ]
+            );
             return response()->json([
                 'token' => $user->createToken('token')->plainTextToken
             ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Google login failed'], 500);
         }
-        return response()->json([
-            'message' => 'Invalid credentials'
-        ])->setStatusCode(401);
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\API\QueueSubscriptionController;
 use App\Http\Controllers\API\ShopController;
 use App\Http\Controllers\API\UserController;
 use Illuminate\Support\Facades\Route;
+use Laravel\Socialite\Facades\Socialite;
 
 Route::middleware('throttle:api')->group(function () {
     Route::get('/', function () {
@@ -34,8 +35,14 @@ Route::post('queues/{queue_id}/next', [QueueController::class, 'next'])->middlew
 Route::get('/subscribe', [QueueSubscriptionController::class, 'subscribe'])->middleware('auth:sanctum');
 
 Route::post('login', [AuthenticateController::class, 'login'])->name('user.login');
-Route::post('oauth', [AuthenticateController::class, 'oAuth'])->name('user.oauth');
 Route::post('register', [AuthenticateController::class, 'register'])->name('user.register');
+
+Route::get('auth/google', [AuthenticateController::class, 'redirectToGoogle']);
+Route::get('auth/google/callback', [AuthenticateController::class, 'handleGoogleCallback']);
+
+
+
+
 
 
 

@@ -15,7 +15,10 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $image_uri = str_replace('/','+', $this->image_uri);
+        $appUrl = env('APP_URL');
+        $image_url = str_replace($appUrl,'', $this->image_uri);
+        $image_url = str_replace("/", "+", $image_url);
+        $image_url = $appUrl . $image_url;
         return [
            'id' => $this->id,
            'email' => $this->email,
@@ -23,7 +26,7 @@ class UserResource extends JsonResource
            'role' => $this->role,
            'address' => $this->address,
            'phone' => $this->phone,
-            'image_uri' => $image_uri
+            'image_url' => $image_url
         ];
     }
 }

@@ -50,11 +50,13 @@ class UserController extends Controller
         $path = null;
         if ($request->hasFile('image')) {
             $file = $request->image;
-            $filename = now()->format('Y-m-d H:i:s.u') . '.png';
+            $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
             $path = 'user_images/'. $user->id .'/'. $filename;
             Storage::disk('s3')->put($path, file_get_contents($file), 'private');
         }
-        $this->userRepository->update(['image_uri' => $path], $user->id);
+        $this->userRepository->update([
+            'image_url' => env("APP_URL") . $path
+        ], $user->id);
 
         return IdResource::make($user);
     }
