@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\IdResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -20,7 +21,8 @@ class UserController extends Controller
     ) {}
     public function index()
     {
-        //
+        $users = $this->userRepository->getAll();
+        return UserResource::collection($users);
     }
 
     /**
@@ -36,29 +38,27 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required',
-            'password' => 'required',
-            'role' => 'required',
-            'gender' => 'required',
-            'address' => 'required',
-            'user_phone' => 'required',
-            'birth_date' => 'required',
-        ]);
-
         $user = $this->userRepository->create([
-            'name' => $request->get('name'),
-            'email' => $request->get('email'),
-            'password' => Hash::make($request->get('password')),
-            'role' => $request->get('role'),
-            'gender' => $request->get('gender'),
-            'address' => $request->get('address'),
-            'user_phone' => $request->get('user_phone'),
-            'birth_date' => $request->get('birth_date'),
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+            'address' => $request->address,
+            'phone' => $request->user_phone,
+            'role' => $request->role
         ]);
 
-        return new UserResource($user);
+        $path = null;
+        if ($request->hasFile('image')) {
+            $file = $request->image;
+            $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
+            $path = 'user_images/'. $user->id .'/'. $filename;
+            Storage::disk('s3')->put($path, file_get_contents($file), 'private');
+        }
+        $this->userRepository->update([
+            'image_url' => env("APP_URL") . $path
+        ], $user->id);
+
+        return IdResource::make($user);
     }
 
     /**

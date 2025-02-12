@@ -22,7 +22,7 @@ class ShopFactory extends Factory
             'address' => $this->faker->address,
             'phone' => $this->faker->phoneNumber,
             'description' => $this->faker->sentence,
-            'image_url' => $this->faker->imageUrl(640, 480, 'business'),
+            'image_uri' => $this->faker->imageUrl(640, 480, 'business'),
             'is_open' => $this->faker->boolean,
             'approve_status' => $this->faker->randomElement(['P', 'A', 'R']), // P = Pending, A = Approved, R = Rejected
             'latitude' => $this->faker->latitude(-90, 90),
