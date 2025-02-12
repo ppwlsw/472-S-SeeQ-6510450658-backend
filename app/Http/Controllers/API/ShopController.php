@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateShopRequest;
 use App\Http\Requests\UpdateShopRequest;
 use App\Http\Resources\ShopResource;
-use App\Http\Resources\IdShopResource;
+use App\Http\Resources\IdResource;
 use App\Models\Shop;
 use App\Repositories\ShopRepository;
 use Illuminate\Http\Request;
@@ -49,10 +49,10 @@ class ShopController extends Controller
             'description' => $request->get('description'),
             'latitude' => $request->get('latitude'),
             'longitude' => $request->get('longitude'),
-            'image_url' => $request->get('image_url'),
+            'image_uri' => $request->get('image_uri'),
             'user_id' => auth()->id(),
         ]);
-        return IdShopResource::make($shop);
+        return IdResource::make($shop);
     }
 
     /**
@@ -83,14 +83,14 @@ class ShopController extends Controller
             'address' => $request->get('address'),
             'phone' => $request->get('shop_phone'),
             'description' => $request->get('description'),
-            'image_url' => $request->get('image_url'),
+            'image_uri' => $request->get('image_uri'),
             'is_open' => $request->get('is_open'),
             'approve_status' => $request->get('approve_status'),
             'latitude' => $request->get('latitude'),
             'longitude' => $request->get('longitude'),
             'user_id' => auth()->id(),
         ]);
-        return IdShopResource::make($shop);
+        return IdResource::make($shop);
     }
 
     /**

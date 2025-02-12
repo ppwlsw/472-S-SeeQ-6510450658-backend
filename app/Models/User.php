@@ -24,11 +24,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'user_image_url',
-        'gender',
+        'image_url',
         'address',
-        'user_phone',
-        'birth_date',
+        'phone',
+        'login_by'
     ];
 
     // Optionally, you can define hidden attributes like password and remember_token
