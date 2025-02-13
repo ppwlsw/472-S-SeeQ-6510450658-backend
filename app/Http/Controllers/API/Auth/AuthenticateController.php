@@ -91,6 +91,7 @@ class AuthenticateController extends Controller
                     'password' => '',
                     'image_url' => $googleUser->avatar,
                     'login_by' => 'google',
+                    'email_verified_at' => now(),
                 ]
             );
             return response()->json([

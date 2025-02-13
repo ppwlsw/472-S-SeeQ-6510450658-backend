@@ -27,7 +27,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'image_url',
         'address',
         'phone',
-        'login_by'
+        'login_by',
+        'email_verified_at',
     ];
 
     // Optionally, you can define hidden attributes like password and remember_token
