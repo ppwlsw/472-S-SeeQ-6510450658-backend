@@ -15,12 +15,14 @@ return new class extends Migration
         Schema::create('shops', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('address')->nullable();
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
+            $table->string('image_url')->nullable();
             $table->string('phone')->nullable();
+            $table->string('address')->nullable();
             $table->string('description')->nullable();
-            $table->string('image_uri')->nullable();
             $table->boolean('is_open')->default(false);
-            $table->string('approve_status')->default("P");
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->foreignIdFor(User::class);
