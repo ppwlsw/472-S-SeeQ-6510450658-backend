@@ -28,7 +28,7 @@ class LoginRequest extends FormRequest
     {
         return [
             'email' => 'required|string|email',
-            'password' => 'required|string|min:6|regex:/[A-Z]/|regex:/[a-z]/|regex:/[0-9]/',
+            'password' => 'required|string',
         ];
     }
 
@@ -38,8 +38,7 @@ class LoginRequest extends FormRequest
             'email.required' => 'Email is required',
             'email.email' => 'Email is invalid',
             'password.required' => 'Password is required',
-            'password.min' => 'Password must be at least 6 characters',
-            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+            'password.string' => 'Password must be a string',
         ];
 
     }

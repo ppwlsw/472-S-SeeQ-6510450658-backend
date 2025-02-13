@@ -22,12 +22,28 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string',
+            'name' => 'required|string|min:3',
             'email' => 'required|string|email|unique:users,email',
             'password' => 'required|string|min:6|regex:/[A-Z]/|regex:/[a-z]/|regex:/[0-9]/',
-            'address' => 'nullable|string',
             'phone' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Name is required',
+            'name.min' => 'Name must be at least 3 characters',
+            'email.required' => 'Email is required',
+            'email.email' => 'Invalid email format',
+            'email.unique' => 'Email already exists',
+            'password.required' => 'Password is required',
+            'password.min' => 'Password must be at least 6 characters',
+            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+            'phone.string' => 'Invalid phone number format',
+            'image.image' => 'Invalid image format',
+            'image.mimes' => 'Invalid image format',
         ];
     }
 }

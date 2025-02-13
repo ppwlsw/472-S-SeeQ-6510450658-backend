@@ -19,7 +19,7 @@ class AuthenticateController extends Controller
     ) {}
 
     public function login(LoginRequest $request) {
-        $email = $request->email;
+        $email = strtolower($request->email);
         $password = $request->password;
         $user = $this->userRepository->getByEmail($email);
         if (!$user) {
@@ -46,9 +46,8 @@ class AuthenticateController extends Controller
     public function register(RegisterRequest $request) {
         $user = $this->userRepository->create([
             'name' => $request->name,
-            'email' => $request->email,
+            'email' => strtolower($request->email),
             'password' => bcrypt($request->password),
-            'address' => $request->address,
             'phone' => $request->phone,
         ]);
 
