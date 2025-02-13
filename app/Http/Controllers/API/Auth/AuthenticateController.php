@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Repositories\UserRepository;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Socialite\Facades\Socialite;
@@ -26,6 +27,12 @@ class AuthenticateController extends Controller
                 'message' => 'User not found'
             ])->setStatusCode(404);
         }
+        if (!$user->email_verified_at) {
+            return response()->json([
+                'message' => 'Email not verified'
+            ])->setStatusCode(403);
+        }
+
         if (Hash::check($password, $user->password)) {
             return response()->json([
                 'token' => $user->createToken('token')->plainTextToken
@@ -55,6 +62,8 @@ class AuthenticateController extends Controller
         $user->update([
             'image_url' => env("APP_URL") . $path
         ]);
+
+        event(new Registered($user));
 
         return response()->json([
             'message' => 'User registered successfully',
