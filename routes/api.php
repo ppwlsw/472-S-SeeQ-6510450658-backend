@@ -17,11 +17,14 @@ Route::middleware('throttle:api')->group(function () {
     });
 });
 
-Route::apiResource('users', UserController::class);
+Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
+Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
+    ->middleware('auth:sanctum')
+    ->name('users.update.password');
 
 Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
 
-Route::get('images/{image}', [ImageController::class, 'show']);
+Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');
 
 Route::get('queues/{queue_id}', [QueueController::class, 'getAllQueues'])->middleware('auth:sanctum');
 Route::apiResource('queues', QueueController::class)->middleware('auth:sanctum');
@@ -36,24 +39,10 @@ Route::get('/subscribe', [QueueSubscriptionController::class, 'subscribe'])->mid
 Route::post('login', [AuthenticateController::class, 'login'])->name('user.login');
 Route::post('register', [AuthenticateController::class, 'register'])->name('user.register');
 
-Route::get('auth/google', [AuthenticateController::class, 'redirectToGoogle']);
-Route::get('auth/google/callback', [AuthenticateController::class, 'handleGoogleCallback']);
+Route::get('auth/google', [AuthenticateController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('auth/google/callback', [AuthenticateController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
-// routes/web.php
-Route::get('mail', function () {
-    // Create dummy data to simulate the email view
-    $dummyUser = (object)[
-        'name' => 'John Doe',
-        'email' => 'john@example.com'
-    ];
 
-    $dummyUrl = url('/verify-email?dummy=1');
-
-    return view('emails.verify', [
-        'url' => $dummyUrl,
-        'user' => $dummyUser
-    ]);
-});
 
 
 

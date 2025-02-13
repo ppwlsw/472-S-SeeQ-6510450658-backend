@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateUserPasswordRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\IdResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -19,6 +22,7 @@ class UserController extends Controller
     public function __construct(
         private UserRepository $userRepository
     ) {}
+
     public function index()
     {
         $users = $this->userRepository->getAll();
@@ -38,27 +42,7 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $user = $this->userRepository->create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'address' => $request->address,
-            'phone' => $request->user_phone,
-            'role' => $request->role
-        ]);
-
-        $path = null;
-        if ($request->hasFile('image')) {
-            $file = $request->image;
-            $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
-            $path = 'user_images/'. $user->id .'/'. $filename;
-            Storage::disk('s3')->put($path, file_get_contents($file), 'private');
-        }
-        $this->userRepository->update([
-            'image_url' => env("APP_URL") . $path
-        ], $user->id);
-
-        return IdResource::make($user);
+       //
     }
 
     /**
@@ -66,6 +50,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
+        Gate::authorize('view', $user);
         return new UserResource($user);
     }
     /**
@@ -79,9 +64,14 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        //
+        Gate::authorize('update', $user);
+        $user->update([
+            'name' => $request->name,
+            'phone' => $request->phone
+        ]);
+        return IdResource::make($user);
     }
 
     /**
@@ -90,5 +80,26 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         //
+    }
+
+    public function updatePassword(UpdateUserPasswordRequest $request, User $user)
+    {
+        Gate::authorize('update', $user);
+        if ($user->login_by != 'default') {
+            return response()->json([
+                'message' => 'Unauthorized'
+            ])->setStatusCode(401);
+        }
+
+        $new_password = $request->new_password;
+        if (Hash::check($new_password, $user->password)) {
+            return response()->json([
+                'message' => 'New password must differ from the old'
+            ])->setStatusCode(400);
+        }
+        $user->update([
+            'password' => Hash::make($new_password)
+        ]);
+        return IdResource::make($user);
     }
 }
