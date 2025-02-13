@@ -39,21 +39,7 @@ Route::post('register', [AuthenticateController::class, 'register'])->name('user
 Route::get('auth/google', [AuthenticateController::class, 'redirectToGoogle']);
 Route::get('auth/google/callback', [AuthenticateController::class, 'handleGoogleCallback']);
 
-// routes/web.php
-Route::get('mail', function () {
-    // Create dummy data to simulate the email view
-    $dummyUser = (object)[
-        'name' => 'John Doe',
-        'email' => 'john@example.com'
-    ];
 
-    $dummyUrl = url('/verify-email?dummy=1');
-
-    return view('emails.verify', [
-        'url' => $dummyUrl,
-        'user' => $dummyUser
-    ]);
-});
 
 
 

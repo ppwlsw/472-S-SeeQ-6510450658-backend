@@ -59,8 +59,10 @@ class AuthenticateController extends Controller
             $path = 'user_images/'. $user->id .'/'. $filename;
             Storage::disk('s3')->put($path, file_get_contents($file), 'private');
         }
+
+        $uri = str_replace('/', '+', $path);
         $user->update([
-            'image_url' => env("APP_URL") . $path
+            'image_url' => env("APP_URL") . 'api/images/' . $uri
         ]);
 
         event(new Registered($user));
