@@ -9,10 +9,14 @@ use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateShopRequest;
 use App\Http\Resources\ShopResource;
 use App\Http\Resources\IdResource;
+use App\Mail\VerificationEmail;
 use App\Models\Shop;
 use App\Repositories\ShopRepository;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
 class ShopController extends Controller
@@ -45,6 +49,7 @@ class ShopController extends Controller
     public function store(CreateShopRequest $request)
     {
         Gate::authorize('create', Shop::class);
+
         $shop = $this->shopRepository->create([
             'name' => $request->name,
             'email' => strtolower($request->email),
@@ -54,6 +59,7 @@ class ShopController extends Controller
             'description' => $request->description,
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
+            'verification_token' => Str::random(40),
         ]);
 
         if ($request->hasFile('image')) {
@@ -67,7 +73,24 @@ class ShopController extends Controller
             ]);
         }
 
+        Mail::to($shop->email)->send(new VerificationEmail($shop));
+
         return IdResource::make($shop);
+    }
+
+    public function verify($token)
+    {
+        $shop = Shop::where('verification_token', $token)->first();
+
+        if (!$shop) {
+            return  view('emails.verifystatus', ['status' => 'reject', 'path_link' => url('http://localhost:5173/dashboard/shop')]);
+        }
+
+        $shop->verification_token = null;
+        $shop->email_verified_at = now();
+        $shop->save();
+
+        return view('emails.verifystatus', ['status' => 'success', 'path_link' => url('http://localhost:5173/dashboard/shop')]);
     }
 
     /**
@@ -128,6 +151,7 @@ class ShopController extends Controller
 
     public function updateAvatar(UpdateImageRequest $request, Shop $shop)
     {
+        Gate::authorize('update', $shop);
         if ($request->hasFile('image')) {
             $file = $request->image;
             $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
@@ -138,6 +162,15 @@ class ShopController extends Controller
                 'image_url' => env("APP_URL") . 'api/images/' . $uri
             ]);
         }
+        return IdResource::make($shop);
+    }
+
+    public function updateIsOpen(Request $request, Shop $shop)
+    {
+        Gate::authorize('update', $shop);
+        $shop->update([
+            'is_open' => !$shop->is_open
+        ]);
         return IdResource::make($shop);
     }
 }
