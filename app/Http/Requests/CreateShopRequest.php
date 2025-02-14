@@ -15,11 +15,13 @@ class CreateShopRequest extends FormRequest
     {
         return [
             'name' => 'required|string|min:3|max:255',
+            'email' => 'required|email|unique:shops,email',
+            'password' => 'required|string|min:6|max:255',
             'address' => 'nullable|string|min:3|max:255',
             'phone' => 'nullable|string|min:3|max:255',
             'description' => 'nullable|string|min:3|max:255',
-            'latitude' => 'nullable|double',
-            'longitude' => 'nullable|double',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
             'image_url' => 'nullable|url',
         ];
     }

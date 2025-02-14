@@ -23,6 +23,8 @@ Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
     ->name('users.update.password');
 
 Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
+Route::post('/register-shop', [ShopController::class, 'store']);
+Route::get('/verify-shop/{token}', [ShopController::class, 'verify']);
 
 Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');
 

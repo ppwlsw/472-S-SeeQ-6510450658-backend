@@ -15,15 +15,17 @@ return new class extends Migration
         Schema::create('shops', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('email')->unique();
+            $table->string('password');
+            $table->string('verification_token')->nullable();
             $table->string('address')->nullable();
             $table->string('phone')->nullable();
             $table->string('description')->nullable();
             $table->string('image_uri')->nullable();
             $table->boolean('is_open')->default(false);
-            $table->string('approve_status')->default("P");
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
-            $table->foreignIdFor(User::class);
+            $table->timestamp('email_verified_at')->nullable();
             $table->timestamps();
         });
     }

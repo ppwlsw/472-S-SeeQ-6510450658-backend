@@ -7,10 +7,15 @@ use App\Http\Requests\CreateShopRequest;
 use App\Http\Requests\UpdateShopRequest;
 use App\Http\Resources\ShopResource;
 use App\Http\Resources\IdResource;
+use App\Mail\VerificationEmail;
 use App\Models\Shop;
 use App\Repositories\ShopRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class ShopController extends Controller
 {
@@ -41,18 +46,40 @@ class ShopController extends Controller
      */
     public function store(CreateShopRequest $request)
     {
-        Gate::authorize('create', Shop::class);
+//        Gate::authorize('create', Shop::class);
+        $validated = $request->validated();
+
         $shop = $this->shopRepository->create([
-            'name' => $request->get('name'),
-            'address' => $request->get('address'),
-            'phone' => $request->get('shop_phone'),
-            'description' => $request->get('description'),
-            'latitude' => $request->get('latitude'),
-            'longitude' => $request->get('longitude'),
-            'image_uri' => $request->get('image_uri'),
-            'user_id' => auth()->id(),
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'verification_token' => Str::random(40),
+            'address' => $validated['address'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+            'description' => $validated['description'] ?? null,
+            'latitude' => $validated['latitude'] ?? null,
+            'longitude' => $validated['longitude'] ?? null,
+            'is_open' => false,
         ]);
+
+        Mail::to($shop->email)->send(new VerificationEmail($shop));
+
         return IdResource::make($shop);
+    }
+
+    public function verify($token)
+    {
+        $shop = Shop::where('verification_token', $token)->first();
+
+        if (!$shop) {
+            return response()->json(['message' => 'Token ไม่ถูกต้อง'], 404);
+        }
+
+        $shop->verification_token = null;
+        $shop->email_verified_at = now();
+        $shop->save();
+
+        return view('emails.verifysuccess', ['path_link' => url('http://localhost:5173/dashboard/shop')]);
     }
 
     /**
