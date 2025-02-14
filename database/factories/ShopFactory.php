@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Shop>
@@ -15,19 +15,22 @@ class ShopFactory extends Factory
      *
      * @return array<string, mixed>
      */
+
+    protected static ?string $password;
+
     public function definition(): array
     {
         return [
             'name' => $this->faker->company,
-            'address' => $this->faker->address,
+            'email' => $this->faker->unique()->safeEmail,
+            'password' => static::$password ??= Hash::make('password'),
+            'image_url' => $this->faker->imageUrl(640, 480, 'business'),
             'phone' => $this->faker->phoneNumber,
-            'description' => $this->faker->sentence,
-            'image_uri' => $this->faker->imageUrl(640, 480, 'business'),
+            'address' => $this->faker->address,
+            'description' => $this->faker->text(200),
             'is_open' => $this->faker->boolean,
-            'approve_status' => $this->faker->randomElement(['P', 'A', 'R']), // P = Pending, A = Approved, R = Rejected
             'latitude' => $this->faker->latitude(-90, 90),
             'longitude' => $this->faker->longitude(-180, 180),
-            'user_id' => $this->faker->randomElement(User::all()->pluck('id')->toArray()),
         ];
     }
 }

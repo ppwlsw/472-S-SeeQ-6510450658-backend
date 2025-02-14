@@ -11,5 +11,7 @@ class ShopRepository
 
     private string $model = Shop::class;
 
-    // Add any custom repository methods here
+    public function getByEmail(string $email) {
+        return $this->model::where('email', $email)->first();
+    }
 }
