@@ -12,20 +12,17 @@ class Shop extends Model
     use HasFactory;
     protected $fillable = [
         'name',
-        'address',
-        'phone',
-        'description',
+        'email',
+        'email_verified_at',
+        'password',
         'image_url',
-        'isOpen',
-        'approve_status',
-        'user_id',
-        'location',
+        'phone',
+        'address',
+        'description',
+        'is_open',
+        'latitude',
+        'longitude',
     ];
-
-    public function users() : BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
 
     public function items() : hasMany
     {

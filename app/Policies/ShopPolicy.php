@@ -13,7 +13,7 @@ class ShopPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isAdmin() || $user->isMerchant() || $user->isUser();
+        return $user->isAdmin();
     }
 
     /**
@@ -21,7 +21,7 @@ class ShopPolicy
      */
     public function view(User $user, Shop $shop): bool
     {
-        return $user->isAdmin() || $user->isMerchant() || $user->isUser();
+        return $user->isAdmin() || $user->isUser();
     }
 
     /**
@@ -29,7 +29,7 @@ class ShopPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isAdmin() || $user->isMerchant();
+        return $user->isAdmin();
     }
 
     /**

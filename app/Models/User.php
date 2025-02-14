@@ -29,6 +29,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'phone',
         'login_by',
         'email_verified_at',
+        'role'
     ];
 
     // Optionally, you can define hidden attributes like password and remember_token
@@ -56,11 +57,6 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
-    public function shops() : HasMany
-    {
-        return $this->hasMany(Shop::class);
-    }
-
     public function queues(): BelongsToMany
     {
         return $this->belongsToMany(Queue::class, 'users_queues')->withPivot('queue_number');
@@ -74,10 +70,5 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isUser(): bool
     {
         return $this->role === 'USER';
-    }
-
-    public function isMerchant(): bool
-    {
-        return $this->role === 'MERCHANT';
     }
 }

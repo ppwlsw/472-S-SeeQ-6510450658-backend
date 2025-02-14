@@ -25,7 +25,6 @@ return new class extends Migration
             $table->boolean('is_open')->default(false);
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
-            $table->foreignIdFor(User::class);
             $table->timestamps();
         });
     }
