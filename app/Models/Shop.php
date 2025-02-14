@@ -21,25 +21,27 @@ class Shop extends Model implements Authenticatable
         'name',
         'email',
         'password',
-        'image_url',
-        'phone',
+        'verification_token',
         'address',
+        'phone',
         'description',
+        'image_url',
         'is_open',
         'latitude',
         'longitude',
+        'email_verified_at',
     ];
 
     protected $hidden = [
-        'password',
-        'remember_token',
+        'password', 'verification_token','remember_token'
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
         'is_open' => 'boolean',
-        'latitude' => 'decimal:7',
-        'longitude' => 'decimal:7',
+        'email_verified_at' => 'datetime',
+        'is_open',
+        'latitude',
+        'longitude',
     ];
 
     public function items() : hasMany
