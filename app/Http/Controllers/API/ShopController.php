@@ -72,14 +72,14 @@ class ShopController extends Controller
         $shop = Shop::where('verification_token', $token)->first();
 
         if (!$shop) {
-            return response()->json(['message' => 'Token ไม่ถูกต้อง'], 404);
+            return  view('emails.verifystatus', ['status' => 'reject', 'path_link' => url('http://localhost:5173/dashboard/shop')]);
         }
 
         $shop->verification_token = null;
         $shop->email_verified_at = now();
         $shop->save();
 
-        return view('emails.verifysuccess', ['path_link' => url('http://localhost:5173/dashboard/shop')]);
+        return view('emails.verifystatus', ['status' => 'success', 'path_link' => url('http://localhost:5173/dashboard/shop')]);
     }
 
     /**

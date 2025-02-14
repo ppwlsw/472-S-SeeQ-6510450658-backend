@@ -30,11 +30,20 @@
         }
 
         /* สไตล์ของหัวข้อ */
-        .confirmation-message h1 {
-            color: #38a169;
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
+
+        @if($status === 'success')
+            .confirmation-message h1 {
+                color: #38a169;
+                font-size: 1.5rem;
+                font-weight: bold;
+            }
+        @else
+            .confirmation-message h1 {
+                color: #e53e3e;
+                font-size: 1.5rem;
+                font-weight: bold;
+            }
+        @endif
 
         /* สไตล์ของข้อความเนื้อหา */
         .confirmation-message p {
@@ -62,9 +71,16 @@
 </head>
 <body>
 <div class="confirmation-message">
-    <h1>ยืนยันบัญชีสำเร็จ</h1>
-    <p>เริ่มใช้บริการจากแอพพลิเคชั่น SeeQ ได้เลย!</p>
-    <a href={{ $path_link }} class="btn">กลับไปที่หน้าแรก</a>
+    @if($status === 'success')
+        <h1>ยืนยันบัญชีสำเร็จ</h1>
+        <p>เริ่มใช้บริการจากแอพพลิเคชั่น SeeQ ได้เลย!</p>
+        <a href={{ $path_link }} class="btn">กลับไปที่หน้าแรก</a>
+    @else
+        <h1>การยืนยันบัญชีไม่สำเร็จ</h1>
+        <p>หากเคยยืนยันบัญชีแล้ว สามารถเข้าสู่ระบบได้เลย</p>
+        <p>หรือหากการยืนยันบัญชีไม่สำเร็จ กรุณาลองใหม่อีกครั้งหรือ</p>
+        <p>ติดต่อเจ้าหน้าที่เพื่อทำการยืนยันบัญชีใหม่อีกครั้ง</p>
+    @endif
 </div>
 </body>
 </html>
