@@ -33,12 +33,12 @@ Route::put('users/{user}/avatar', [UserController::class, 'updateAvatar'])
     ->name('users.update.avatar');
 
 Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
-Route::put('shops/{shop}/password', [ShopController::class, 'updatePassword'])
-    ->middleware('auth:sanctum')
+Route::put('shops/{shop}/password', [ShopController::class, 'updatePassword'])->middleware('auth:sanctum')
     ->name('shops.update.password');
-Route::put('shops/{shop}/avatar', [ShopController::class, 'updateAvatar'])
-    ->middleware('auth:sanctum')
+Route::put('shops/{shop}/avatar', [ShopController::class, 'updateAvatar'])->middleware('auth:sanctum')
     ->name('shops.update.avatar');
+Route::put('shops/{shop}/is-open', [ShopController::class, 'updateIsOpen'])->middleware('auth:sanctum')
+    ->name('shops.update.is-open');
 
 Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');
 

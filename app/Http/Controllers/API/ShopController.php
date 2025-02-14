@@ -11,6 +11,7 @@ use App\Http\Resources\ShopResource;
 use App\Http\Resources\IdResource;
 use App\Models\Shop;
 use App\Repositories\ShopRepository;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -128,6 +129,7 @@ class ShopController extends Controller
 
     public function updateAvatar(UpdateImageRequest $request, Shop $shop)
     {
+        Gate::authorize('update', $shop);
         if ($request->hasFile('image')) {
             $file = $request->image;
             $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
@@ -138,6 +140,15 @@ class ShopController extends Controller
                 'image_url' => env("APP_URL") . 'api/images/' . $uri
             ]);
         }
+        return IdResource::make($shop);
+    }
+
+    public function updateIsOpen(Request $request, Shop $shop)
+    {
+        Gate::authorize('update', $shop);
+        $shop->update([
+            'is_open' => !$shop->is_open
+        ]);
         return IdResource::make($shop);
     }
 }
