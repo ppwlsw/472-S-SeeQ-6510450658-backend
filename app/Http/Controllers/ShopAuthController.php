@@ -23,6 +23,11 @@ class ShopAuthController extends Controller
                 'message' => 'Shop not found'
             ])->setStatusCode(404);
         }
+        if (! $shop->email_verified_at) {
+            return response()->json([
+                'message' => 'Shop not verified'
+            ], 403);
+        }
 
         if (Hash::check($password, $shop->password)) {
             return response()->json([
