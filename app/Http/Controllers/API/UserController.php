@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\UpdateUserPasswordRequest;
+use App\Http\Requests\UpdateImageRequest;
+use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\IdResource;
 use App\Http\Resources\UserResource;
@@ -12,6 +13,7 @@ use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -83,7 +85,7 @@ class UserController extends Controller
         //
     }
 
-    public function updatePassword(UpdateUserPasswordRequest $request, User $user)
+    public function updatePassword(UpdatePasswordRequest $request, User $user)
     {
         Gate::authorize('update', $user);
         if ($user->login_by != 'default') {
@@ -101,6 +103,21 @@ class UserController extends Controller
         $user->update([
             'password' => Hash::make($new_password)
         ]);
+        return IdResource::make($user);
+    }
+
+    public function updateAvatar(UpdateImageRequest $request, User $user)
+    {
+        if ($request->hasFile('image')) {
+            $file = $request->image;
+            $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
+            $path = 'user_images/'. $user->id .'/'. $filename;
+            Storage::disk('s3')->put($path, file_get_contents($file), 'private');
+            $uri = str_replace('/', '+', $path);
+            $user->update([
+                'image_url' => env("APP_URL") . 'api/images/' . $uri
+            ]);
+        }
         return IdResource::make($user);
     }
 }

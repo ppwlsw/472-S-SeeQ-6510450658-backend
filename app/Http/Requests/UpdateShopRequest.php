@@ -23,14 +23,9 @@ class UpdateShopRequest extends FormRequest
     {
         return [
             'name' => 'required|string|min:3|max:255',
-            'address' => 'nullable|string|min:3|max:255',
-            'phone' => 'nullable|string|min:3|max:255',
-            'description' => 'nullable|string|min:3|max:255',
-            'image_url' => 'nullable|url',
-            'is_open' => 'required|boolean',
-            'approve_status' => 'required|boolean|in:P,A,R',
-            'latitude' => 'nullable|double',
-            'longitude' => 'nullable|double',
+            'address' => 'nullable|string|min:3',
+            'phone' => 'nullable|string',
+            'description' => 'nullable|string|min:3',
         ];
     }
 }

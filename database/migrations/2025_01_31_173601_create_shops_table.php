@@ -23,8 +23,8 @@ return new class extends Migration
             $table->string('address')->nullable();
             $table->string('description')->nullable();
             $table->boolean('is_open')->default(false);
-            $table->decimal('latitude', 10, 7)->nullable();
-            $table->decimal('longitude', 10, 7)->nullable();
+            $table->decimal('latitude', 10, 7);
+            $table->decimal('longitude', 10, 7);
             $table->timestamps();
         });
     }
