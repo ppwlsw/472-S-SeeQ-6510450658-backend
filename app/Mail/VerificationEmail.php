@@ -43,7 +43,7 @@ class VerificationEmail extends Mailable
             view: 'emails.verify',
             with: [
                 'shop' => $this->shop,
-                'verificationLink' => url('/api/verify-shop/' . $this->shop->verification_token),
+                'verificationLink' => url('/api/shops/' . $this->shop->verification_token . '/verify'),
             ]
         );
     }

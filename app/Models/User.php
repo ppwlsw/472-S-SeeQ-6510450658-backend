@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -29,6 +28,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'phone',
         'login_by',
         'email_verified_at',
+        'role'
     ];
 
     // Optionally, you can define hidden attributes like password and remember_token
@@ -56,8 +56,6 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
-
-
     public function queues(): BelongsToMany
     {
         return $this->belongsToMany(Queue::class, 'users_queues')->withPivot('queue_number');
@@ -71,10 +69,5 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isUser(): bool
     {
         return $this->role === 'USER';
-    }
-
-    public function isMerchant(): bool
-    {
-        return $this->role === 'MERCHANT';
     }
 }

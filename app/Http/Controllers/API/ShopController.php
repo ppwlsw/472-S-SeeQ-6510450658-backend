@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateShopRequest;
+use App\Http\Requests\UpdateImageRequest;
+use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateShopRequest;
 use App\Http\Resources\ShopResource;
 use App\Http\Resources\IdResource;
@@ -16,6 +18,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class ShopController extends Controller
 {
@@ -46,21 +49,30 @@ class ShopController extends Controller
      */
     public function store(CreateShopRequest $request)
     {
-//        Gate::authorize('create', Shop::class);
-        $validated = $request->validated();
+        Gate::authorize('create', Shop::class);
 
         $shop = $this->shopRepository->create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
+            'name' => $request->name,
+            'email' => strtolower($request->email),
+            'password' => bcrypt($request->password),
+            'phone' => $request->shop_phone,
+            'address' => $request->address,
+            'description' => $request->description,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
             'verification_token' => Str::random(40),
-            'address' => $validated['address'] ?? null,
-            'phone' => $validated['phone'] ?? null,
-            'description' => $validated['description'] ?? null,
-            'latitude' => $validated['latitude'] ?? null,
-            'longitude' => $validated['longitude'] ?? null,
-            'is_open' => false,
         ]);
+
+        if ($request->hasFile('image')) {
+            $file = $request->image;
+            $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
+            $path = 'shop_images/'. $shop->id .'/'. $filename;
+            Storage::disk('s3')->put($path, file_get_contents($file), 'private');
+            $uri = str_replace('/', '+', $path);
+            $shop->update([
+                'image_url' => env("APP_URL") . 'api/images/' . $uri
+            ]);
+        }
 
         Mail::to($shop->email)->send(new VerificationEmail($shop));
 
@@ -107,15 +119,9 @@ class ShopController extends Controller
         Gate::authorize('update', $shop);
         $shop->update([
             'name' => $request->get('name'),
-            'address' => $request->get('address'),
             'phone' => $request->get('shop_phone'),
+            'address' => $request->get('address'),
             'description' => $request->get('description'),
-            'image_uri' => $request->get('image_uri'),
-            'is_open' => $request->get('is_open'),
-            'approve_status' => $request->get('approve_status'),
-            'latitude' => $request->get('latitude'),
-            'longitude' => $request->get('longitude'),
-            'user_id' => auth()->id(),
         ]);
         return IdResource::make($shop);
     }
@@ -129,4 +135,33 @@ class ShopController extends Controller
         $shop->delete();
     }
 
+    public function updatePassword(UpdatePasswordRequest $request, Shop $shop)
+    {
+        Gate::authorize('update', $shop);
+        $new_password = $request->new_password;
+        if (Hash::check($new_password, $shop->password)) {
+            return response()->json([
+                'message' => 'New password must differ from the old'
+            ])->setStatusCode(400);
+        }
+        $shop->update([
+            'password' => Hash::make($new_password)
+        ]);
+        return IdResource::make($shop);
+    }
+
+    public function updateAvatar(UpdateImageRequest $request, Shop $shop)
+    {
+        if ($request->hasFile('image')) {
+            $file = $request->image;
+            $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
+            $path = 'shop_images/'. $shop->id .'/'. $filename;
+            Storage::disk('s3')->put($path, file_get_contents($file), 'private');
+            $uri = str_replace('/', '+', $path);
+            $shop->update([
+                'image_url' => env("APP_URL") . 'api/images/' . $uri
+            ]);
+        }
+        return IdResource::make($shop);
+    }
 }

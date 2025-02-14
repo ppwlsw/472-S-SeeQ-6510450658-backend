@@ -19,13 +19,13 @@ return new class extends Migration
             $table->string('password');
             $table->string('verification_token')->nullable();
             $table->string('address')->nullable();
+            $table->string('image_url')->nullable();
             $table->string('phone')->nullable();
             $table->string('description')->nullable();
-            $table->string('image_uri')->nullable();
             $table->boolean('is_open')->default(false);
-            $table->decimal('latitude', 10, 7)->nullable();
-            $table->decimal('longitude', 10, 7)->nullable();
             $table->timestamp('email_verified_at')->nullable();
+            $table->decimal('latitude', 10, 7);
+            $table->decimal('longitude', 10, 7);
             $table->timestamps();
         });
     }

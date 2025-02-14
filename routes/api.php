@@ -6,6 +6,7 @@ use App\Http\Controllers\API\QueueController;
 use App\Http\Controllers\API\QueueSubscriptionController;
 use App\Http\Controllers\API\ShopController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\ShopAuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('throttle:api')->group(function () {
@@ -17,14 +18,30 @@ Route::middleware('throttle:api')->group(function () {
     });
 });
 
+Route::post('login', [AuthenticateController::class, 'login'])->name('user.login');
+Route::post('shop/login', [ShopAuthController::class, 'login'])->name('shop.login');
+Route::post('register', [AuthenticateController::class, 'register'])->name('user.register');
+Route::get('auth/google', [AuthenticateController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('auth/google/callback', [AuthenticateController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+
 Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
 Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
     ->middleware('auth:sanctum')
     ->name('users.update.password');
+Route::put('users/{user}/avatar', [UserController::class, 'updateAvatar'])
+    ->middleware('auth:sanctum')
+    ->name('users.update.avatar');
 
 Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
-Route::post('/register-shop', [ShopController::class, 'store']);
-Route::get('/verify-shop/{token}', [ShopController::class, 'verify']);
+
+Route::put('shops/{shop}/password', [ShopController::class, 'updatePassword'])
+    ->middleware('auth:sanctum')
+    ->name('shops.update.password');
+Route::put('shops/{shop}/avatar', [ShopController::class, 'updateAvatar'])
+    ->middleware('auth:sanctum')
+    ->name('shops.update.avatar');
+
+Route::get('/shops/{token}/verify', [ShopController::class, 'verify']);
 
 Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');
 
@@ -38,11 +55,7 @@ Route::post('queues/{queue_id}/next', [QueueController::class, 'next'])->middlew
 
 Route::get('/subscribe', [QueueSubscriptionController::class, 'subscribe'])->middleware('auth:sanctum');
 
-Route::post('login', [AuthenticateController::class, 'login'])->name('user.login');
-Route::post('register', [AuthenticateController::class, 'register'])->name('user.register');
 
-Route::get('auth/google', [AuthenticateController::class, 'redirectToGoogle'])->name('auth.google');
-Route::get('auth/google/callback', [AuthenticateController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
 
 

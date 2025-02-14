@@ -15,14 +15,14 @@ class CreateShopRequest extends FormRequest
     {
         return [
             'name' => 'required|string|min:3|max:255',
-            'email' => 'required|email|unique:shops,email',
-            'password' => 'required|string|min:6|max:255',
-            'address' => 'nullable|string|min:3|max:255',
-            'phone' => 'nullable|string|min:3|max:255',
-            'description' => 'nullable|string|min:3|max:255',
+            'email' => 'required|string|email|unique:shops,email',
+            'password' => 'required|string|min:6|regex:/[A-Z]/|regex:/[a-z]/|regex:/[0-9]/',
+            'image' => 'nullable|image|mimes:jpg,png,jpeg',
+            'phone' => 'nullable|string',
+            'address' => 'nullable|string',
+            'description' => 'nullable|string',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
-            'image_url' => 'nullable|url',
         ];
     }
 }
