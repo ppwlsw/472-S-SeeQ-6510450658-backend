@@ -26,7 +26,7 @@ class AuthenticateController extends Controller
         }
         if (Hash::check($password, $user->password)) {
             return response()->json([
-                'token' => $user->createToken('token')->plainTextToken
+                'token' => $user->createToken('token')->plainTextToken,
             ]);
         }
         return response()->json([

@@ -72,6 +72,26 @@ services:
             - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
         networks:
             - sail
+    prometheus:
+        image: prom/prometheus
+        restart: always
+        volumes:
+            - ./prometheus.yml:/etc/prometheus/prometheus.yml
+        ports:
+            - "9090:9090"
+        networks:
+            - sail
+    grafana:
+        image: grafana/grafana
+        restart: always
+        ports:
+            - "3000:3000"
+        environment:
+            - GF_SECURITY_ADMIN_PASSWORD=admin
+        volumes:
+            - grafana-data:/var/lib/grafana
+        networks:
+            - sail
 networks:
     sail:
         driver: bridge
@@ -80,3 +100,4 @@ volumes:
         driver: local
     sail-redis:
         driver: local
+    grafana-data:

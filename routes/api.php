@@ -1,12 +1,15 @@
 <?php
 
 use App\Http\Controllers\API\Auth\AuthenticateController;
+use App\Http\Controllers\API\ItemController;
 use App\Http\Controllers\API\QueueController;
 use App\Http\Controllers\API\QueueSubscriptionController;
 use App\Http\Controllers\API\ShopController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Resources\ReminderCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Redis;
 
 Route::middleware('throttle:api')->group(function () {
     Route::get('/', function () {
@@ -19,23 +22,41 @@ Route::middleware('throttle:api')->group(function () {
 
 Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
 
-Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('shops', ShopController::class);
 
+    Route::apiResource('queues', QueueController::class);
 
-Route::get('queues/{queue_id}', [QueueController::class, 'getAllQueues'])->middleware('auth:sanctum');
-Route::apiResource('queues', QueueController::class)->middleware('auth:sanctum');
+    Route::prefix('queues/{queue_id}')->group(function () {
+        Route::post('join', [QueueController::class, 'joinQueue']);
+        Route::post('status', [QueueController::class, 'status']);
+        Route::post('cancel', [QueueController::class, 'cancel']);
+        Route::post('next', [QueueController::class, 'next']);
+        Route::get('getAllQueue', [QueueController::class, 'getAllQueues']);
+        Route::get('getQueueNumber', [QueueController::class, 'getQueueNumber']);
+    });
 
-Route::post('queues/{queue_id}/join', [QueueController::class, 'joinQueue'])->middleware('auth:sanctum');
-Route::get('queues/{queue_id}/status', [QueueController::class, 'status'])->middleware('auth:sanctum');
-Route::post('queues/{queue_id}/cancel', [QueueController::class, 'cancel'])->middleware('auth:sanctum');
-Route::post('queues/{queue_id}/next', [QueueController::class, 'next'])->middleware('auth:sanctum');
+    Route::apiResource('items', ItemController::class);
+    Route::apiResource('reminders', ReminderCollection::class);
+});
 
-Route::get('/subscribe', [QueueSubscriptionController::class, 'subscribe'])->middleware('auth:sanctum');
+Route::get('/queues/{queue_id}/subscribe', [QueueSubscriptionController::class, 'subscribe']);
+
 
 Route::post('login', [AuthenticateController::class, 'login'])->name('user.login');
 Route::post('register', [AuthenticateController::class, 'register'])->name('user.register');
 
 
+Route::get('redis_key', function (){
+    return Redis::keys("*");
+});
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::post("/test", function (Request $request) {
+    return response()->json([
+        "data" => $request->get("data")
+    ]);
+});

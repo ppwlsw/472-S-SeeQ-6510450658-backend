@@ -8,7 +8,6 @@ use App\Http\Resources\ShopResource;
 use App\Models\Shop;
 use App\Repositories\ShopRepository;
 use Illuminate\Http\Request;
-use function Laravel\Prompts\warning;
 
 class ShopController extends Controller
 {
@@ -19,10 +18,34 @@ class ShopController extends Controller
         private ShopRepository $shopRepository
     ) {}
 
-    public function index()
+    public function index(Request $request)
     {
-        $shops = $this->shopRepository->getAll();
-        return new ShopCollection($shops);
+        $shop_id = $request->query('shop_id');
+        if($shop_id){
+            $shop = $this->shopRepository->getById($shop_id);
+            return new ShopResource($shop);
+        }
+
+//        return new ShopCollection($this->shopRepository->getAll());
+
+        $shops = $this->shopRepository->get(12);
+        return response()->json([
+            'data' => $shops
+        ]);
+//        return response()->json([
+//            'data' => ShopResource::collection($shops),
+//        ]);
+
+
+//        $cacheKey = "shops";
+//        $shopsJson = Redis::get($cacheKey);
+//        if ($shopsJson){
+//            $shops = JsonHelper::parseJsonToCollection($shopsJson);
+//            return new ShopCollection($shops);
+//        }
+//        $shops = $this->shopRepository->getAll();
+//        Redis::setex($cacheKey, 600, json_encode($shops));
+//        return new ShopCollection($shops);
     }
 
     /**

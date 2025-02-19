@@ -7,12 +7,11 @@ use App\Http\Controllers\Controller;
 
 class QueueSubscriptionController extends Controller
 {
-    public function subscribe(Request $request)
+    public function subscribe(Request $request, $queue_id)
     {
-        $queueId = $request->query('queue_id');
 
-        return response()->stream(function () use ($queueId) {
-            $channel = "queue_updates:$queueId";
+        return response()->stream(function () use ($queue_id) {
+            $channel = "queue_updates:$queue_id";
 
             Redis::subscribe([$channel], function ($message) {
                 echo "data: " . $message . "\n\n";

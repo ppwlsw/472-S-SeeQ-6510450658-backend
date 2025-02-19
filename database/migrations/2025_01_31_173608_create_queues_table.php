@@ -17,8 +17,9 @@ return new class extends Migration
             $table->string('name');
             $table->string('description')->nullable();
             $table->string('queue_image_url')->nullable();
-            $table->integer('current_queue')->default(0);
+            $table->integer('queue_counter')->default(0);
             $table->boolean('is_available')->default(true);
+            $table->string('tag');
             $table->foreignIdFor(Shop::class);
             $table->timestamps();
         });
