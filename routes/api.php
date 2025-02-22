@@ -55,8 +55,4 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::post("/test", function (Request $request) {
-    return response()->json([
-        "data" => $request->get("data")
-    ]);
-});
+Route::get("/test/redisConnection", [QueueController::class, 'testConnection']);

@@ -318,28 +318,30 @@ class QueueController extends Controller
         if (!$queue){
             return response()->json(["message" => "Queue not found"], 404);
         }
-
         $queueKey = "queue:$queue_id";
 
-        $nextQueue = Redis::rpop($queueKey);
-        if($nextQueue){
-            $array = explode("_", $nextQueue);
-            $user_id = $array[0];
-            $this->userQueueRepository->updateStatusToComplete($user_id, $queue_id);
-        }
+        // ใช้ Redis Transaction
+        $nextQueue = Redis::transaction(function ($redis) use ($queueKey) {
+            return $redis->rpop($queueKey);
+        });
 
-        if(!$nextQueue){
+        if (!$nextQueue[0]){
             return response()->json(["message" => "Queue is empty"], 200);
         }
+
+        $array = explode("_", $nextQueue[0]);
+        $user_id = $array[0];
+        $this->userQueueRepository->updateStatusToComplete($user_id, $queue_id);
+
         // Notify via Redis Pub/Sub
         Redis::publish("queue_updates:$queue_id", json_encode([
             "event" => "next",
-            "nextQueue" => $nextQueue
+            "nextQueue" => $nextQueue[0]
         ]));
 
         return response()->json([
             "message" => "Next user called",
-            "next_queue" => $nextQueue
+            "next_queue" => $nextQueue[0]
         ], 200);
     }
 
@@ -365,5 +367,25 @@ class QueueController extends Controller
 
         return response()->json([
             "Result" => $queue, ], 200);
+    }
+
+    public function testConnection(Request $request)
+    {
+        try {
+            $redis = Redis::connection();
+            $result = $redis->ping();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Redis connection successful',
+                'ping_result' => $result
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Redis connection failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

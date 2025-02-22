@@ -16,7 +16,7 @@
         "laravel/horizon": "^5.30",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
-        "predis/predis": "^2.0",
+        "predis/predis": "^2.3",
         "spatie/laravel-health": "^1.32",
         "spatie/laravel-prometheus": "^1.2"
     },
