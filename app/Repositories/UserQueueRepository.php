@@ -41,7 +41,7 @@ class UserQueueRepository
     }
 
     public function updateStatusToCancel(int $user_id, int $queueID){
-        return DB::table('users_queues')->where('user_id', $user_id)->where('queue_id', $queueID)->update(['status' => "cancel"]);
+        return DB::table('users_queues')->where('user_id', $user_id)->where('queue_id', $queueID)->update(['status' => "canceled"]);
     }
 
     public function updateStatusToComplete(int $user_id, int $queueID){
