@@ -36,12 +36,19 @@ class AuthenticateController extends Controller
                 'token' => $token
             ])->setStatusCode(201);
         }
+
         return response()->json([
             'message' => 'Invalid credentials'
         ])->setStatusCode(401);
     }
 
     public function register(RegisterRequest $request) {
+        if ($this->userRepository->isEmailExist($request->email)) {
+            return response()->json([
+                'message' => 'Email already exists'
+            ], 422);
+        }
+
         $user = $this->userRepository->create([
             'name' => $request->name,
             'email' => strtolower($request->email),

@@ -25,7 +25,7 @@ class RegisterRequest extends FormRequest
     {
         return [
             'name' => 'required|string|min:3',
-            'email' => 'required|string|email|unique:users,email',
+            'email' => 'required|string|email',
             'password' => 'required|string|min:6|regex:/[A-Z]/|regex:/[a-z]/|regex:/[0-9]/',
             'phone' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
@@ -39,7 +39,6 @@ class RegisterRequest extends FormRequest
             'name.min' => 'Name must be at least 3 characters',
             'email.required' => 'Email is required',
             'email.email' => 'Invalid email format',
-            'email.unique' => 'Email already exists',
             'password.required' => 'Password is required',
             'password.min' => 'Password must be at least 6 characters',
             'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, and one number',
