@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Auth;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class RegisterRequest extends FormRequest
 {
@@ -45,5 +47,15 @@ class RegisterRequest extends FormRequest
             'image.image' => 'Invalid image format',
             'image.mimes' => 'Invalid image format',
         ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(
+            response()->json([
+                'message' => 'Validation failed',
+                'error' => $validator->errors()
+            ], 422)
+        );
     }
 }

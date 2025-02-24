@@ -23,6 +23,7 @@ Route::post('shop/login', [ShopAuthController::class, 'login'])->name('shop.logi
 Route::post('register', [AuthenticateController::class, 'register'])->name('user.register');
 Route::get('auth/google', [AuthenticateController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('auth/google/callback', [AuthenticateController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+Route::post('auth/decrypt', [AuthenticateController::class, 'decrypt'])->name('auth.decrypt');
 
 Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
 Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
