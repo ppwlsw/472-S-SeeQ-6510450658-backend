@@ -28,7 +28,6 @@ class RegisterRequest extends FormRequest
             'email' => 'required|string|email',
             'password' => 'required|string|min:6|regex:/[A-Z]/|regex:/[a-z]/|regex:/[0-9]/',
             'phone' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
         ];
     }
 
@@ -43,8 +42,6 @@ class RegisterRequest extends FormRequest
             'password.min' => 'Password must be at least 6 characters',
             'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, and one number',
             'phone.string' => 'Invalid phone number format',
-            'image.image' => 'Invalid image format',
-            'image.mimes' => 'Invalid image format',
         ];
     }
 

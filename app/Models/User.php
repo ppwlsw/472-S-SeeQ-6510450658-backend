@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -61,6 +62,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Queue::class, 'users_queues')->withPivot('queue_number');
     }
 
+    public function shops(): HasOne
+    {
+        return $this->hasOne(Shop::class);
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'ADMIN';
@@ -69,5 +75,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isUser(): bool
     {
         return $this->role === 'USER';
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->role === 'CUSTOMER';
+    }
+
+    public function isShop(): bool
+    {
+        return $this->role === 'SHOP';
     }
 }

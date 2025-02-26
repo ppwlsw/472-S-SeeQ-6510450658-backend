@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Shop;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -10,18 +10,19 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class VerificationEmail extends Mailable
+class UserVerificationEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
     /**
      * Create a new message instance.
      */
-    public $shop;
 
-    public function __construct(Shop $shop)
+    public $user;
+
+    public function __construct(User $user)
     {
-        $this->shop = $shop;
+        $this->user = $user;
     }
 
     /**
@@ -30,7 +31,7 @@ class VerificationEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'ยืนยันบัญชีร้านค้ากับ SeeQ'
+            subject: 'ยืนยันบัญชีผู้ใช้กับ SeeQ',
         );
     }
 
@@ -40,10 +41,10 @@ class VerificationEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.verify',
+            view: 'emails.user.verify',
             with: [
-                'shop' => $this->shop,
-                'verificationLink' => url('/api/shops/' . $this->shop->verification_token . '/verify'),
+                'user' => $this->user,
+                'verificationLink' => url("/api/auth/users/" . $this->user->id . "/" . sha1($this->user->email) . "/verify"),
             ]
         );
     }
