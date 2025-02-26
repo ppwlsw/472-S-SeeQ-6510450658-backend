@@ -23,6 +23,7 @@ Route::post('shop/login', [ShopAuthController::class, 'login'])->name('shop.logi
 Route::post('register', [AuthenticateController::class, 'register'])->name('user.register');
 Route::get('auth/google', [AuthenticateController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('auth/google/callback', [AuthenticateController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+Route::post('auth/decrypt', [AuthenticateController::class, 'decrypt'])->name('auth.decrypt');
 
 Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
 Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
@@ -35,14 +36,13 @@ Route::put('users/{user}/avatar', [UserController::class, 'updateAvatar'])
 Route::get('shops/filter', [ShopController::class, 'filterShop']);
 
 Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
-
 Route::put('shops/{shop}/password', [ShopController::class, 'updatePassword'])
     ->middleware('auth:sanctum')
     ->name('shops.update.password');
-Route::put('shops/{shop}/avatar', [ShopController::class, 'updateAvatar'])
-    ->middleware('auth:sanctum')
+Route::put('shops/{shop}/avatar', [ShopController::class, 'updateAvatar'])->middleware('auth:sanctum')
     ->name('shops.update.avatar');
-
+Route::put('shops/{shop}/is-open', [ShopController::class, 'updateIsOpen'])->middleware('auth:sanctum')
+    ->name('shops.update.is-open');
 Route::get('/shops/{token}/verify', [ShopController::class, 'verify']);
 
 Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');

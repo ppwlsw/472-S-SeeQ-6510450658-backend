@@ -108,6 +108,7 @@ class UserController extends Controller
 
     public function updateAvatar(UpdateImageRequest $request, User $user)
     {
+        Gate::authorize('update', $user);
         if ($request->hasFile('image')) {
             $file = $request->image;
             $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
