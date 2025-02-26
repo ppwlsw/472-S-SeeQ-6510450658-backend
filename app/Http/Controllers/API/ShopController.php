@@ -35,6 +35,13 @@ class ShopController extends Controller
         return ShopResource::collection($shops);
     }
 
+    public function filterShop(Request $request)
+    {
+
+        $shops = $this->shopRepository->filter($request->all());
+
+        return ShopResource::collection($shops);
+    }
     /**
      * Show the form for creating a new resource.
      */
