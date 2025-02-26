@@ -6,40 +6,28 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Auth\Authenticatable as AuthenticatedTrait;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class Shop extends Model implements Authenticatable
+class Shop extends Model
 {
-    use AuthenticatedTrait;
-    use HasApiTokens;
     use HasFactory;
-    use Notifiable;
 
     protected $fillable = [
         'name',
-        'email',
-        'password',
-        'verification_token',
+        'image_url',
         'address',
         'phone',
         'description',
-        'image_url',
         'is_open',
         'latitude',
         'longitude',
-        'email_verified_at',
-    ];
-
-    protected $hidden = [
-        'password', 'verification_token','remember_token'
     ];
 
     protected $casts = [
         'is_open' => 'boolean',
-        'email_verified_at' => 'datetime',
-        'is_open',
         'latitude',
         'longitude',
     ];
@@ -49,7 +37,11 @@ class Shop extends Model implements Authenticatable
         return $this->hasMany(Item::class);
     }
 
-    public function queues() : hasMany{
+    public function queues() : hasMany {
         return $this->hasMany(Queue::class);
+    }
+
+    public function users(): BelongsTo {
+        return $this->belongsTo(User::class);
     }
 }
