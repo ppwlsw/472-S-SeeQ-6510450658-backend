@@ -24,6 +24,7 @@ class Shop extends Model
         'is_open',
         'latitude',
         'longitude',
+        'user_id'
     ];
 
     protected $casts = [

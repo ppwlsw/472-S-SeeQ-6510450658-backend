@@ -15,9 +15,8 @@ class CreateShopRequest extends FormRequest
     {
         return [
             'name' => 'required|string|min:3|max:255',
-            'email' => 'required|string|email|unique:shops,email',
+            'email' => 'required|string|email|unique:users,email',
             'password' => 'required|string|min:6|regex:/[A-Z]/|regex:/[a-z]/|regex:/[0-9]/',
-            'image' => 'nullable|image|mimes:jpg,png,jpeg',
             'phone' => 'nullable|string',
             'address' => 'nullable|string',
             'description' => 'nullable|string',

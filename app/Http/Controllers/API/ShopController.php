@@ -9,14 +9,15 @@ use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateShopRequest;
 use App\Http\Resources\ShopResource;
 use App\Http\Resources\IdResource;
-use App\Mail\VerificationEmail;
+use App\Mail\ShopVerificationEmail;
 use App\Models\Shop;
 use App\Repositories\ShopRepository;
+use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
 class ShopController extends Controller
@@ -25,7 +26,8 @@ class ShopController extends Controller
      * Display a listing of the resource.
      */
     public function __construct(
-        private ShopRepository $shopRepository
+        private ShopRepository $shopRepository,
+        private UserRepository $userRepository
     ) {}
 
     public function index()
@@ -57,48 +59,50 @@ class ShopController extends Controller
     {
         Gate::authorize('create', Shop::class);
 
-        $shop = $this->shopRepository->create([
-            'name' => $request->name,
-            'email' => strtolower($request->email),
-            'password' => bcrypt($request->password),
-            'phone' => $request->shop_phone,
-            'address' => $request->address,
-            'description' => $request->description,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'verification_token' => Str::random(40),
-        ]);
-
-        if ($request->hasFile('image')) {
-            $file = $request->image;
-            $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
-            $path = 'shop_images/'. $shop->id .'/'. $filename;
-            Storage::disk('s3')->put($path, file_get_contents($file), 'private');
-            $uri = str_replace('/', '+', $path);
-            $shop->update([
-                'image_url' => env("APP_URL") . 'api/images/' . $uri
+        $result = DB::transaction(function () use ($request) {
+            $user = $this->userRepository->create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
+                'phone' => $request->phone
             ]);
-        }
 
-        Mail::to($shop->email)->send(new VerificationEmail($shop));
 
-        return IdResource::make($shop);
+            $shop = $this->shopRepository->create([
+                'user_id' => $user->id,
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'address' => $request->address,
+                'description' => $request->description,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+            ]);
+
+            if ($request->hasFile('image')) {
+                $file = $request->image;
+                $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
+                $path = 'shop_images/'. $shop->id .'/'. $filename;
+                Storage::disk('s3')->put($path, file_get_contents($file), 'private');
+                $uri = str_replace('/', '+', $path);
+                $shop->update([
+                    'image_url' => env("APP_URL") . 'api/images/' . $uri
+                ]);
+            }
+            return [
+                'user' => $user,
+                'shop' => $shop
+            ];
+        });
+
+        $user = $result['user'];
+        $shop = $result['shop'];
+
+        Mail::to($user->email)->send(new ShopVerificationEmail($shop, $user));
+
+        return IdResource::make($shop)->response()->setStatusCode(201);
     }
 
-    public function verify($token)
-    {
-        $shop = Shop::where('verification_token', $token)->first();
 
-        if (!$shop) {
-            return  view('emails.verifystatus', ['status' => 'reject', 'path_link' => url('http://localhost:5173/dashboard/shop')]);
-        }
-
-        $shop->verification_token = null;
-        $shop->email_verified_at = now();
-        $shop->save();
-
-        return view('emails.verifystatus', ['status' => 'success', 'path_link' => url('http://localhost:5173/dashboard/shop')]);
-    }
 
     /**
      * Display the specified resource.
@@ -106,7 +110,7 @@ class ShopController extends Controller
     public function show(Shop $shop)
     {
         Gate::authorize('view', Shop::class);
-        return ShopResource::make($shop);
+        return ShopResource::make($shop)->response()->setStatusCode(200);
     }
 
     /**
@@ -129,7 +133,7 @@ class ShopController extends Controller
             'address' => $request->get('address'),
             'description' => $request->get('description'),
         ]);
-        return IdResource::make($shop);
+        return IdResource::make($shop)->response()->setStatusCode(200);
     }
 
     /**
@@ -147,13 +151,13 @@ class ShopController extends Controller
         $new_password = $request->new_password;
         if (Hash::check($new_password, $shop->password)) {
             return response()->json([
-                'message' => 'New password must differ from the old'
+                'error' => 'New password must differ from the old'
             ])->setStatusCode(400);
         }
         $shop->update([
             'password' => Hash::make($new_password)
         ]);
-        return IdResource::make($shop);
+        return IdResource::make($shop)->response()->setStatusCode(200);
     }
 
     public function updateAvatar(UpdateImageRequest $request, Shop $shop)
@@ -169,7 +173,7 @@ class ShopController extends Controller
                 'image_url' => env("APP_URL") . 'api/images/' . $uri
             ]);
         }
-        return IdResource::make($shop);
+        return IdResource::make($shop)->response()->setStatusCode(200);
     }
 
     public function updateIsOpen(Request $request, Shop $shop)
@@ -178,6 +182,6 @@ class ShopController extends Controller
         $shop->update([
             'is_open' => !$shop->is_open
         ]);
-        return IdResource::make($shop);
+        return IdResource::make($shop)->response()->setStatusCode(200);
     }
 }
