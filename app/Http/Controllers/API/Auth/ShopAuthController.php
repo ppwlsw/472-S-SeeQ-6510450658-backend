@@ -47,13 +47,13 @@ class ShopAuthController extends Controller
         $user = $this->userRepository->getById($id);
 
         if (!hash_equals($token, sha1($user->email)) || $user->email_verified_at) {
-            return  view('emails.shop.verifystatus', ['status' => 'reject', 'path_link' => url('http://localhost:5173/dashboard/shop')]);
+            return  view('emails.shop.verifystatus', ['status' => 'reject', 'path_link' => url(env('APP_SHOP_URL') . 'dashboard/shop')]);
         }
 
         $user->email_verified_at = now();
         $user->role = 'SHOP';
         $user->save();
 
-        return view('emails.shop.verifystatus', ['status' => 'success', 'path_link' => url('http://localhost:5173/dashboard/shop')]);
+        return view('emails.shop.verifystatus', ['status' => 'success', 'path_link' => url(env('APP_SHOP_URL') . 'dashboard/shop')]);
     }
 }

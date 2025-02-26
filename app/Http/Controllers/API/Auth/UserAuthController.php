@@ -10,7 +10,6 @@ use App\Http\Resources\LoginResource;
 use App\Http\Resources\RedirectResource;
 use App\Mail\UserVerificationEmail;
 use App\Repositories\UserRepository;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -115,7 +114,7 @@ class UserAuthController extends Controller
             );
             $token = Crypt::encrypt($user->createToken('token')->plainTextToken);
 
-            return redirect()->away(env("USER_FRONT_URL") . "login?token=" . $token, 201);
+            return redirect()->away(env("APP_USER_URL") . "login?token=" . $token, 201);
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Google login failed'], 500);
@@ -136,13 +135,13 @@ class UserAuthController extends Controller
         $user = $this->userRepository->getById($id);
 
         if (!hash_equals($token, sha1($user->email)) || $user->email_verified_at) {
-            return  view('emails.user.verifystatus', ['status' => 'reject', 'path_link' => url('http://localhost:5173/login')]);
+            return  view('emails.user.verifystatus', ['status' => 'reject', 'path_link' => url(env('APP_USER_URL') . 'login')]);
         }
 
         $user->email_verified_at = now();
         $user->role = 'CUSTOMER';
         $user->save();
 
-        return view('emails.user.verifystatus', ['status' => 'success', 'path_link' => url('http://localhost:5173/login')]);
+        return view('emails.user.verifystatus', ['status' => 'success', 'path_link' => url(env('APP_USER_URL') . 'login')]);
     }
 }
