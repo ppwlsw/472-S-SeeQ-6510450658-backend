@@ -24,12 +24,11 @@ class ShopResource extends JsonResource
             'description' => $this->description,
             'image_uri' => $this->image_uri,
             'is_open' => $this->is_open,
-            'approve_status' => $this->approve_status,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
-            'user_id' => $this->user_id,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'deleted_at' => $this->deleted_at,
         ];
     }
 }
