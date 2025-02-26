@@ -1,12 +1,12 @@
 <?php
 
-use App\Http\Controllers\API\Auth\AuthenticateController;
+use App\Http\Controllers\API\Auth\UserAuthController;
+use App\Http\Controllers\API\Auth\ShopAuthController;
 use App\Http\Controllers\API\ImageController;
 use App\Http\Controllers\API\QueueController;
 use App\Http\Controllers\API\QueueSubscriptionController;
 use App\Http\Controllers\API\ShopController;
 use App\Http\Controllers\API\UserController;
-use App\Http\Controllers\ShopAuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('throttle:api')->group(function () {
@@ -18,12 +18,16 @@ Route::middleware('throttle:api')->group(function () {
     });
 });
 
-Route::post('login', [AuthenticateController::class, 'login'])->name('user.login');
-Route::post('shop/login', [ShopAuthController::class, 'login'])->name('shop.login');
-Route::post('register', [AuthenticateController::class, 'register'])->name('user.register');
-Route::get('auth/google', [AuthenticateController::class, 'redirectToGoogle'])->name('auth.google');
-Route::get('auth/google/callback', [AuthenticateController::class, 'handleGoogleCallback'])->name('auth.google.callback');
-Route::post('auth/decrypt', [AuthenticateController::class, 'decrypt'])->name('auth.decrypt');
+Route::post('auth/users/login', [UserAuthController::class, 'login'])->name('auth.user.login');
+Route::post('auth/shop/login', [ShopAuthController::class, 'login'])->name('auth.shop.login');
+Route::post('auth/users/register', [UserAuthController::class, 'register'])->name('auth.user.register');
+Route::get('auth/google', [UserAuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('auth/google/callback', [UserAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+Route::post('auth/decrypt', [UserAuthController::class, 'decrypt'])->name('auth.decrypt');
+Route::get('auth/shops/{id}/{token}/verify', [ShopAuthController::class, 'verify'])->name('auth.shop.verify');
+Route::get('auth/users/{id}/{token}/verify', [UserAuthController::class, 'verify'])->name('auth.user.verify');
+
+
 
 Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
 Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
@@ -33,6 +37,8 @@ Route::put('users/{user}/avatar', [UserController::class, 'updateAvatar'])
     ->middleware('auth:sanctum')
     ->name('users.update.avatar');
 
+Route::get('shops/filter', [ShopController::class, 'filterShop']);
+
 Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
 Route::put('shops/{shop}/password', [ShopController::class, 'updatePassword'])
     ->middleware('auth:sanctum')
@@ -41,7 +47,6 @@ Route::put('shops/{shop}/avatar', [ShopController::class, 'updateAvatar'])->midd
     ->name('shops.update.avatar');
 Route::put('shops/{shop}/is-open', [ShopController::class, 'updateIsOpen'])->middleware('auth:sanctum')
     ->name('shops.update.is-open');
-Route::get('/shops/{token}/verify', [ShopController::class, 'verify']);
 
 Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');
 

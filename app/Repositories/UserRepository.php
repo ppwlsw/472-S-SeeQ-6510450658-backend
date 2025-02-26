@@ -14,16 +14,11 @@ class UserRepository
     // Add any custom repository methods here
 
     public function getByEmail(string $email) {
-        return $this->model::where('email', $email)->where('login_by', 'default')->first();
+        return $this->model::where('email', $email)->first();
     }
 
     public function updateOrCreate(array $attributes, array $values)
     {
         return $this->model::updateOrCreate($attributes, $values);
-    }
-
-    public function isEmailExist(string $email)
-    {
-        return $this->model::where('email', $email)->where('login_by', 'default')->exists();
     }
 }
