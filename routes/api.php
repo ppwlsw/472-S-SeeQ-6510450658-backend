@@ -6,6 +6,7 @@ use App\Http\Controllers\API\QueueController;
 use App\Http\Controllers\API\QueueSubscriptionController;
 use App\Http\Controllers\API\ShopController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\ShopAuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,6 +43,13 @@ Route::put('shops/{shop}/avatar', [ShopController::class, 'updateAvatar'])->midd
 Route::put('shops/{shop}/is-open', [ShopController::class, 'updateIsOpen'])->middleware('auth:sanctum')
     ->name('shops.update.is-open');
 Route::get('/shops/{token}/verify', [ShopController::class, 'verify']);
+
+
+
+Route::get('/shops/reminders/{shop_id}', [ReminderController::class, 'show'])->name('reminders.show');
+Route::post('/shops/reminders', [ReminderController::class, 'store'])->name('reminders.store');
+Route::patch('/shops/reminders/{shop_id}', [ReminderController::class, 'markAsDone'])->name('reminders.update');
+
 
 Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');
 

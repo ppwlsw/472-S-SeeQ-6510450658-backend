@@ -52,4 +52,10 @@ class Shop extends Model implements Authenticatable
     public function queues() : hasMany{
         return $this->hasMany(Queue::class);
     }
+
+    public function reminders() : HasMany
+    {
+        return $this->hasMany(Reminder::class);
+    }
+
 }
