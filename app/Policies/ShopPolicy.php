@@ -11,17 +11,17 @@ class ShopPolicy
     /**
      * Determine whether the user can view any models.
      */
-    public function viewAny(): bool
+    public function viewAny(User $user): bool
     {
-        return true;
+        return $user->isCustomer() || $user->isAdmin();
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(): bool
+    public function view(User $user): bool
     {
-        return true;
+        return $user->isCustomer() || $user->isAdmin() || $user->isShop();
     }
 
     /**
@@ -35,25 +35,26 @@ class ShopPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(Shop $user, Shop $shop): bool
+    public function update(User $user, Shop $shop): bool
     {
-        return $user->id == $shop->id;
+        return $user->isAdmin || ($user->id == $shop->user_id);
+
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Shop $shop): bool
+    public function delete(User $user): bool
     {
-        return false;
+        return $user->isAdmin();
     }
 
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Shop $shop): bool
+    public function restore(User $user): bool
     {
-        return false;
+        return $user->isAdmin();
     }
 
     /**

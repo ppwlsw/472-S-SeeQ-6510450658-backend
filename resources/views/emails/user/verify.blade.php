@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>ยืนยันบัญชีร้านค้า</title>
+    <title>ยืนยันบัญชีผู้ใช้</title>
     <style>
         body {
             font-family: 'Prompt', 'Sarabun', sans-serif;
@@ -142,34 +142,26 @@
 <body>
 <div class="container">
     <div class="header">
-        <h1>ยินดีต้อนรับสู่ระบบร้านค้า</h1>
+        <h1>ยินดีต้อนรับสู่ระบบผุ้ใช้</h1>
     </div>
     <div class="content">
         <div class="welcome-text">
-            <p>สวัสดีคุณ {{ $shop->name }},<br>
-                ขอบคุณที่ลงทะเบียนร้านค้ากับเรา กรุณาตรวจสอบข้อมูลและยืนยันบัญชีของคุณ</p>
+            <p>สวัสดีคุณ {{ $user->name }},<br>
+                ขอบคุณที่ลงทะเบียนผู้ใช้กับเรา กรุณาตรวจสอบข้อมูลและยืนยันบัญชีของคุณ</p>
         </div>
 
         <table class="details-table">
             <tr>
-                <td>ชื่อร้าน</td>
-                <td>{{ $shop->name }}</td>
+                <td>ชื่อผู้ใช้</td>
+                <td>{{ $user->name }}</td>
             </tr>
             <tr>
                 <td>อีเมล</td>
-                <td>{{ $shop->email }}</td>
-            </tr>
-            <tr>
-                <td>ที่อยู่</td>
-                <td>{{ $shop->address ?? 'ไม่ระบุ' }}</td>
+                <td>{{ $user->email }}</td>
             </tr>
             <tr>
                 <td>เบอร์โทรศัพท์</td>
-                <td>{{ $shop->phone ?? 'ไม่ระบุ' }}</td>
-            </tr>
-            <tr>
-                <td>รายละเอียด</td>
-                <td>{{ $shop->description ?? 'ไม่ระบุ' }}</td>
+                <td>{{ $user->phone ?? 'ไม่ระบุ' }}</td>
             </tr>
         </table>
 

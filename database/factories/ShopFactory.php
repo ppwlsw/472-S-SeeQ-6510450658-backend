@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 
@@ -21,9 +22,8 @@ class ShopFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => User::where('role', 'SHOP')->inRandomOrder()->first()?->id,
             'name' => $this->faker->company,
-            'email' => $this->faker->unique()->safeEmail,
-            'password' => static::$password ??= Hash::make('password'),
             'image_url' => $this->faker->imageUrl(640, 480, 'business'),
             'phone' => $this->faker->phoneNumber,
             'address' => $this->faker->address,
