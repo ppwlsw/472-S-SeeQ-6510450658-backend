@@ -47,6 +47,8 @@ Route::put('shops/{shop}/avatar', [ShopController::class, 'updateAvatar'])->midd
     ->name('shops.update.avatar');
 Route::put('shops/{shop}/is-open', [ShopController::class, 'updateIsOpen'])->middleware('auth:sanctum')
     ->name('shops.update.is-open');
+Route::put('shops/{id}/location', [ShopController::class, 'updateLocation'])->middleware('auth:sanctum')
+    ->name('shops.update.location');
 
 Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');
 

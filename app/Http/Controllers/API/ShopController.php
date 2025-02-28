@@ -73,7 +73,6 @@ class ShopController extends Controller
                 'name' => $request->name,
                 'phone' => $request->phone,
                 'address' => $request->address,
-                'description' => $request->description,
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
             ]);
@@ -143,6 +142,17 @@ class ShopController extends Controller
     {
         Gate::authorize('delete', $shop);
         $shop->delete();
+    }
+
+    public function updateLocation(Request $request, int $id)
+    {
+        Gate::authorize('update', Shop::class);
+        $shop = $this->shopRepository->getById($id);
+        $shop->update([
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude
+        ]);
+        return IdResource::make($shop)->response()->setStatusCode(200);
     }
 
     public function updatePassword(UpdatePasswordRequest $request, Shop $shop)
