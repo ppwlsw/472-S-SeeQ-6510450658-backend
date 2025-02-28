@@ -24,7 +24,7 @@ Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('shops', ShopController::class);
-
+    Route::get('queues/getAllQueuesReserved', [QueueController::class, 'getQueueReserved']);
     Route::apiResource('queues', QueueController::class);
 
     Route::prefix('queues/{queue_id}')->group(function () {

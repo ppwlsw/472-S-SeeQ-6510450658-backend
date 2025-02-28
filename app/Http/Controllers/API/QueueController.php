@@ -121,18 +121,6 @@ class QueueController extends Controller
      */
     public function update(Request $request, Queue $queue)
     {
-//        $request->validate(["shop_id" => "required"]);
-//        $shop_id = $request->get("shop_id");
-        //check if there is item in that shop
-//        $checkQueue = $this->queueRepository->getQueueByShopID($shop_id, $queue->id);
-
-        //if there is no item in that shop
-//        if(!$checkQueue){
-//            return response()->json([
-//                "message" => "Queue not found"
-//            ], 404);
-//        }
-
        $validate = $request->validate([]);
 
         if($request->isMethod("put")){
@@ -207,10 +195,6 @@ class QueueController extends Controller
         if($alreadyExist){
             return response()->json(["message" => "Already joined this queue"], 400);
         }
-//
-//        if (Redis::lpos($queueKey, $value) !== false){
-//            return response()->json(["message" => "Queue already joined"], 400);
-//        }
 
         $attributes = ["user_id" => $user_id, "queue_id" => $queue->id, "queue_number" => $queueUserGot];
 
@@ -287,7 +271,7 @@ class QueueController extends Controller
 
         $join = $this->userQueueRepository->checkUserAlreadyJoinQueue($user_id, $queue_id);
         if($join){
-            $this->userQueueRepository->updateStatusToCancel($user_id, $queue_id);
+            $this->userQueueRepository->updateStatusToCancel($user_id, $queue_id, $queueUserGot);
         }
 
         $queueKey = "queue:$queue_id";
@@ -331,7 +315,8 @@ class QueueController extends Controller
 
         $array = explode("_", $nextQueue[0]);
         $user_id = $array[0];
-        $this->userQueueRepository->updateStatusToComplete($user_id, $queue_id);
+        $queueUserGot = $array[1];
+        $this->userQueueRepository->updateStatusToComplete($user_id, $queue_id, $queueUserGot);
 
         // Notify via Redis Pub/Sub
         Redis::publish("queue_updates:$queue_id", json_encode([
@@ -367,6 +352,15 @@ class QueueController extends Controller
 
         return response()->json([
             "Result" => $queue, ], 200);
+    }
+
+    public function getQueueReserved(Request $request)
+    {
+        $user_id = auth()->id();
+        $queues = $this->userQueueRepository->getAllQueueReservedComplete($user_id);
+        return response()->json([
+           "data" => $queues
+        ]);
     }
 
     public function testConnection(Request $request)
