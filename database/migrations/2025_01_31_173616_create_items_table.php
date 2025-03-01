@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->string('item_image_url')->nullable();
             $table->float('price');
-            $table->string('quantity');
+            $table->boolean('is_available');
             $table->foreignIdFor(Shop::class);
             $table->timestamps();
         });

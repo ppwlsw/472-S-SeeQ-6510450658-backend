@@ -87,16 +87,14 @@ class ShopController extends Controller
                     'image_url' => env("APP_URL") . 'api/images/' . $uri
                 ]);
             }
+
+            Mail::to($user->email)->send(new ShopVerificationEmail($shop, $user));
             return [
                 'user' => $user,
                 'shop' => $shop
             ];
         });
-
-        $user = $result['user'];
-        $shop = $result['shop'];
-
-        Mail::to($user->email)->send(new ShopVerificationEmail($shop, $user));
+        $shop = $result["shop"];
 
         return IdResource::make($shop)->response()->setStatusCode(201);
     }

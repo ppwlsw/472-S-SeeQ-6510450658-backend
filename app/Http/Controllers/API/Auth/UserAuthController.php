@@ -30,7 +30,7 @@ class UserAuthController extends Controller
         $password = $request->password;
         $user = $this->userRepository->getByEmail($email);
 
-        if (!$user || !$user->isCustomer() || (!$user->login_by == 'default')) {
+        if (!$user  || (!$user->login_by == 'default')) {
             return response()->json([
                 'error' => 'User not found or not verified'
             ])->setStatusCode(404);

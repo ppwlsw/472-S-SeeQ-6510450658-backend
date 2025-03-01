@@ -1,7 +1,6 @@
 <?php
 
-use App\Models\Queue;
-use App\Models\User;
+use App\Models\Shop;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,12 +12,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users_queues', function (Blueprint $table) {
+        Schema::create('reminders', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Queue::class);
-            $table->foreignIdFor(User::class );
-            $table->string('queue_number');
-            $table->enum("status", ["canceled", "completed", "waiting"])->default("waiting");
+            $table->string("title");
+            $table->text("description");
+            $table->timestamp("reminding_time");
+            $table->boolean("pin");
+            $table->foreignIdFor(Shop::class);
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users_queues');
+        Schema::dropIfExists('reminders');
     }
 };

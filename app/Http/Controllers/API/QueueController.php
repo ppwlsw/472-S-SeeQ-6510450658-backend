@@ -7,6 +7,8 @@ use App\Http\Resources\QueueCollection;
 use App\Http\Resources\QueueResource;
 use App\Models\Queue;
 use App\Repositories\QueueRepository;
+use App\Repositories\UserQueueRepository;
+use App\Utils\JsonHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
 
@@ -16,22 +18,56 @@ class QueueController extends Controller
      * Display a listing of the resource.
      */
     public function __construct(
-        private QueueRepository $queueRepository
+        private QueueRepository $queueRepository,
+        private UserQueueRepository $userQueueRepository
     ) {}
 
-    public function index()
+    /**
+     * Note about cacheKey
+     * queue_shop:shop_id is about all type of queue in that shop
+     * queue_shop is about all type of queue
+     * queue_info:queue_id is about information of queue
+     * queue is use for queue management
+     *
+     */
+
+
+    public function index(Request $request)
     {
-        $shops = $this->queueRepository->getAll();
-        return new QueueCollection($shops);
+        $shop_id = $request->query("shop_id");
+        //query section
+        if($shop_id){
+           $cacheKey = "queue_shop:$shop_id";
+           $queuesJson = Redis::get($cacheKey);
+
+           if($queuesJson){
+               $queues = JsonHelper::parseJsonToCollection($queuesJson);
+               return new QueueCollection($queues);
+           }
+
+           $queues = $this->queueRepository->getAllByShopID($shop_id);
+           Redis::setex($cacheKey, 10, json_encode($queues));
+           return new QueueCollection($queues);
+        }
+
+        // no query section
+        $cacheKey = "queue_shop";
+        $queuesJson = Redis::get($cacheKey);
+
+        if($queuesJson){
+            $queues = JsonHelper::parseJsonToCollection($queuesJson);
+            return new QueueCollection($queues);
+        }
+
+        $queues = $this->queueRepository->getAll();
+        Redis::setex($cacheKey, 10, json_encode($queues));
+        return new QueueCollection($queues);
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
-        //
-    }
+    public function create(){}
 
     /**
      * Store a newly created resource in storage.
@@ -42,6 +78,7 @@ class QueueController extends Controller
             'name' => 'required',
             'description' => 'required',
             'is_available' => 'required',
+            'tag' => 'required',
             'shop_id' => 'required'
         ]);
 
@@ -49,8 +86,8 @@ class QueueController extends Controller
             'name' => $request->get('name'),
             'description' => $request->get('description'),
             'is_available' => $request->get('is_available'),
-            'shop_id' => $request->get('shop_id')
-        ]);
+            'tag' => $request->get('tag'),
+            'shop_id' => $request->get('shop_id'), ]);
         return new QueueResource($queue);
     }
 
@@ -59,23 +96,61 @@ class QueueController extends Controller
      */
     public function show(Queue $queue)
     {
-        //
+        $id = $queue->id;
+        $cacheKey = "queue_info:$id";
+
+        // get from redis if in redis return from redis
+        $queueJson = Redis::get($cacheKey);
+        if($queueJson){
+            $queue = JsonHelper::parseJsonToObject($queueJson);
+            return new QueueResource($queue);
+        }
+
+        // not in redis read from db and cache to redis
+        $queue = $this->queueRepository->getById($id);
+        Redis::setex($cacheKey, 30, json_encode($queue));
+        return new QueueResource($queue);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Queue $queue)
-    {
-        //
-    }
-
+    public function edit(Queue $queue){}
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Queue $queue)
     {
-        //
+       $validate = $request->validate([]);
+
+        if($request->isMethod("put")){
+            $validate = $request->validate([
+                "name" => "string|required",
+                "description" => "string|required",
+                "is_available" => "boolean|required",
+                "queue_image_url" => "string|required",
+                "tag" => "string|required",
+            ]);
+        }
+
+        if($request->isMethod("patch")){
+                $validate = $request->validate([
+                "name" => "string|nullable",
+                "description" => "string|nullable",
+                "is_available" => "boolean|nullable",
+                "queue_image_url" => "string|nullable",
+                "tag" => "string|nullable",
+            ]);
+        }
+
+        $this->queueRepository->update(
+            $validate
+        , $queue->id);
+
+        $cacheKey = "queue_info:$queue->id";
+        Redis::del($cacheKey);
+        Redis::setex($cacheKey, 30, json_encode($queue->refresh()));
+        return new QueueResource($queue->refresh());
     }
 
     /**
@@ -83,24 +158,59 @@ class QueueController extends Controller
      */
     public function destroy(Queue $queue)
     {
-        //
+        $queue = $this->queueRepository->getById($queue->id);
+        if(!$queue){
+            return response()->json(["message" => "Queue not found"], 404);
+        }
+
+        $cacheKey = "queue_info:$queue->id";
+        $queueCacheJson = Redis::get($cacheKey);
+        if($queueCacheJson){
+            Redis::del($cacheKey);
+        }
+
+        $this->queueRepository->delete($queue->id);
+        $queues = $this->queueRepository->getAll();
+        $cacheKey = "queue_shop";
+        Redis::setex($cacheKey, 300, json_encode($queues));
+
+        return response()->json(["message" => "Queue deleted successfully"], 200);
     }
 
     public function joinQueue(Request $request, $queue_id)
     {
         $user_id = auth()->id();
+
+        $queueUserGot = $request->get("queue_user_got"); // A_02
+        $value = "$user_id" . "_" . $queueUserGot;
         $queue = $this->queueRepository->getById($queue_id);
+
         if (!$queue){
             return response()->json(["message" => "Queue not found"], 404);
         }
 
         $queueKey = "queue:$queue->id";
 
-        if (Redis::lpos($queueKey, $user_id) !== false){
-            return response()->json(["message" => "Queue already joined"], 400);
+        $alreadyExist = $this->userQueueRepository->checkUserAlreadyJoinQueue($user_id, $queue_id);
+        if($alreadyExist){
+            return response()->json(["message" => "Already joined this queue"], 400);
         }
 
-        Redis::lpush($queueKey, $user_id);
+        $attributes = ["user_id" => $user_id, "queue_id" => $queue->id, "queue_number" => $queueUserGot];
+
+        $userQueueId =  $this->userQueueRepository->create($attributes);
+        if(!$userQueueId){
+            return response()->json(["message" => "Error When try to create queueUser"], 404);
+        }
+
+
+        Redis::lpush($queueKey, $value);
+
+        $this->queueRepository->increaseQueueCounter($queue_id); // เพิ่ม counter ของ queue
+
+        $cacheKey = "queue_info:$queue->id";
+        Redis::del($cacheKey);
+        Redis::setex($cacheKey, 30, json_encode($queue->refresh()));
 
         return response()->json(["message" => "User is in queue now",], 200);
     }
@@ -108,6 +218,10 @@ class QueueController extends Controller
     public function status(Request $request, $queue_id)
     {
         $user_id = auth()->id();
+
+        $queueUserGot = $request->get("queue_user_got"); // A_02
+        $value = "$user_id" . "_" . $queueUserGot;
+
         $queue = $this->queueRepository->getById($queue_id);
         if (!$queue){
             return response()->json(["message" => "Queue not found"], 404);
@@ -122,10 +236,14 @@ class QueueController extends Controller
         $queueList = array_reverse($queueList);
 
         // Find the position of the user in the queue list
-        $position = array_search($user_id, $queueList);
+        $position = array_search($value, $queueList);
 
         if ($position === false) {
-            return response()->json(["message" => "User is not in queue"], 303);
+            return response()->json([
+                "message" => "User is not in queue",
+                "list" => $queueList,
+                "value" => $value
+            ], 303);
         }
 
         // Human-readable position (1-based index)
@@ -135,6 +253,7 @@ class QueueController extends Controller
             "message" => "User's queue position",
             "position" => $humanReadablePosition,
             "user_id" => $user_id,
+            "queue_name" => $queueUserGot,
         ], 200);
 
     }
@@ -142,23 +261,32 @@ class QueueController extends Controller
     public function cancel(Request $request, $queue_id)
     {
         $user_id = auth()->id();
+        $queueUserGot = $request->get("queue_user_got"); // A_02
+        $value = "$user_id" . "_" . $queueUserGot;
+
         $queue = $this->queueRepository->getById($queue_id);
         if (!$queue){
             return response()->json(["message" => "Queue not found"], 404);
         }
 
+        $join = $this->userQueueRepository->checkUserAlreadyJoinQueue($user_id, $queue_id);
+        if($join){
+            $this->userQueueRepository->updateStatusToCancel($user_id, $queue_id, $queueUserGot);
+        }
+
         $queueKey = "queue:$queue_id";
 
         // Check if user is in queue
-        if (Redis::lpos($queueKey, $user_id) === false) {
+        if (Redis::lpos($queueKey, $value) === false) {
             return response()->json(["message" => "User is not in queue"], 404);
         }
 
-        Redis::lrem($queueKey, 1, $user_id);
-        // 📢 Notify via Redis Pub/Sub
+        Redis::lrem($queueKey, 1, $value);
+        // Notify via Redis Pub/Sub
         Redis::publish("queue_updates:$queue_id", json_encode([
             "event" => "cancel",
-            "user_id" => $user_id
+            "user_id" => $user_id,
+            "queue_name" => $queueUserGot,
         ]));
 
         return response()->json([
@@ -174,24 +302,40 @@ class QueueController extends Controller
         if (!$queue){
             return response()->json(["message" => "Queue not found"], 404);
         }
-
         $queueKey = "queue:$queue_id";
 
-        $nextUserId = Redis::rpop($queueKey);
+        // ใช้ Redis Transaction
+        $nextQueue = Redis::transaction(function ($redis) use ($queueKey) {
+            return $redis->rpop($queueKey);
+        });
 
-        if(!$nextUserId){
+        if (!$nextQueue[0]){
             return response()->json(["message" => "Queue is empty"], 200);
         }
-        // 📢 Notify via Redis Pub/Sub
+
+        $array = explode("_", $nextQueue[0]);
+        $user_id = $array[0];
+        $queueUserGot = $array[1];
+        $this->userQueueRepository->updateStatusToComplete($user_id, $queue_id, $queueUserGot);
+
+        // Notify via Redis Pub/Sub
         Redis::publish("queue_updates:$queue_id", json_encode([
             "event" => "next",
-            "user_id" => $nextUserId
+            "nextQueue" => $nextQueue[0]
         ]));
 
         return response()->json([
             "message" => "Next user called",
-            "next_user_id" => $nextUserId
+            "next_queue" => $nextQueue[0]
         ], 200);
+    }
+
+    public function getQueueNumber(Request $request, $queue_id){
+        $user_id = auth()->id();
+        $queueNumberWithQueueInfo = $this->userQueueRepository->checkQueueNumberAndQueueInfo($user_id, $queue_id);
+        return response()->json([
+            "data" =>$queueNumberWithQueueInfo
+        ]);
     }
 
     public function getAllQueues(Request $request, $queue_id)
@@ -208,5 +352,34 @@ class QueueController extends Controller
 
         return response()->json([
             "Result" => $queue, ], 200);
+    }
+
+    public function getQueueReserved(Request $request)
+    {
+        $user_id = auth()->id();
+        $queues = $this->userQueueRepository->getAllQueueReservedComplete($user_id);
+        return response()->json([
+           "data" => $queues
+        ]);
+    }
+
+    public function testConnection(Request $request)
+    {
+        try {
+            $redis = Redis::connection();
+            $result = $redis->ping();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Redis connection successful',
+                'ping_result' => $result
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Redis connection failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
