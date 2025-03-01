@@ -6,37 +6,43 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Notifications\Notifiable;
 
 class Shop extends Model
 {
     use HasFactory;
+    use Notifiable;
+    use SoftDeletes;
+
     protected $fillable = [
         'name',
+        'image_url',
         'address',
-        'shop_phone',
+        'phone',
         'description',
-        'shop_image_url',
-        'isOpen',
-        'approve_status',
-        'user_id',
-        'location',
+        'is_open',
+        'latitude',
+        'longitude',
+        'user_id'
     ];
 
-    public function users() : BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
+    protected $casts = [
+        'is_open' => 'boolean',
+        'latitude',
+        'longitude',
+    ];
 
     public function items() : hasMany
     {
         return $this->hasMany(Item::class);
     }
 
-    public function queues() : hasMany{
+    public function queues() : hasMany {
         return $this->hasMany(Queue::class);
     }
 
-    public function reminders() : hasMany{
-        return $this->hasMany(Reminder::class);
+    public function user(): BelongsTo {
+        return $this->belongsTo(User::class);
     }
 }

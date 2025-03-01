@@ -19,9 +19,9 @@ class ItemController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request,int $shop_id)
+    public function index(Request $request)
     {
-        $items = $this->itemRepository->getAllItemByShopID($shop_id);
+        $items = $this->itemRepository->getAll();
         return new ItemCollection($items);
     }
 

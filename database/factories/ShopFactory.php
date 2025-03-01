@@ -2,7 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Shop>
@@ -14,16 +16,21 @@ class ShopFactory extends Factory
      *
      * @return array<string, mixed>
      */
+
+    protected static ?string $password;
+
     public function definition(): array
     {
         return [
-            'name' => $this->faker->company, // สร้างชื่อบริษัท
-            'address' => $this->faker->address, // สร้างที่อยู่
-            'shop_phone' => $this->faker->phoneNumber, // สร้างเบอร์โทรศัพท์
-            'description' => $this->faker->sentence, // สร้างคำอธิบาย
-            'is_open' => $this->faker->boolean, // สร้างสถานะเปิดร้าน (true/false)
-            'approve_status' => $this->faker->boolean, // สร้างสถานะอนุมัติ
-            'user_id' => $this->faker->numberBetween(1, 10), // สร้าง user_id แบบสุ่ม
+            'user_id' => User::where('role', 'SHOP')->inRandomOrder()->first()?->id,
+            'name' => $this->faker->company,
+            'image_url' => $this->faker->imageUrl(640, 480, 'business'),
+            'phone' => $this->faker->phoneNumber,
+            'address' => $this->faker->address,
+            'description' => $this->faker->text(200),
+            'is_open' => $this->faker->boolean,
+            'latitude' => $this->faker->latitude(-90, 90),
+            'longitude' => $this->faker->longitude(-180, 180),
         ];
     }
 }

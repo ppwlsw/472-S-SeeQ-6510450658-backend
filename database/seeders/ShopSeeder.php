@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Shop;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class ShopSeeder extends Seeder
@@ -13,6 +13,6 @@ class ShopSeeder extends Seeder
      */
     public function run(): void
     {
-        Shop::factory(100)->create();
+        Shop::factory()->count(User::where('role', 'SHOP')->get()->count())->create();
     }
 }

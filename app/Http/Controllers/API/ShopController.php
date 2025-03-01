@@ -3,11 +3,22 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\ShopCollection;
+use App\Http\Requests\CreateShopRequest;
+use App\Http\Requests\UpdateImageRequest;
+use App\Http\Requests\UpdatePasswordRequest;
+use App\Http\Requests\UpdateShopRequest;
 use App\Http\Resources\ShopResource;
+use App\Http\Resources\IdResource;
+use App\Mail\ShopVerificationEmail;
 use App\Models\Shop;
 use App\Repositories\ShopRepository;
+use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class ShopController extends Controller
 {
@@ -15,39 +26,24 @@ class ShopController extends Controller
      * Display a listing of the resource.
      */
     public function __construct(
-        private ShopRepository $shopRepository
+        private ShopRepository $shopRepository,
+        private UserRepository $userRepository
     ) {}
 
-    public function index(Request $request)
+    public function index()
     {
-        $shop_id = $request->query('shop_id');
-        if($shop_id){
-            $shop = $this->shopRepository->getById($shop_id);
-            return new ShopResource($shop);
-        }
-
-//        return new ShopCollection($this->shopRepository->getAll());
-
-        $shops = $this->shopRepository->get(12);
-        return response()->json([
-            'data' => $shops
-        ]);
-//        return response()->json([
-//            'data' => ShopResource::collection($shops),
-//        ]);
-
-
-//        $cacheKey = "shops";
-//        $shopsJson = Redis::get($cacheKey);
-//        if ($shopsJson){
-//            $shops = JsonHelper::parseJsonToCollection($shopsJson);
-//            return new ShopCollection($shops);
-//        }
-//        $shops = $this->shopRepository->getAll();
-//        Redis::setex($cacheKey, 600, json_encode($shops));
-//        return new ShopCollection($shops);
+        Gate::authorize('viewAny', Shop::class);
+        $shops = $this->shopRepository->getAll();
+        return ShopResource::collection($shops);
     }
 
+    public function filterShop(Request $request)
+    {
+
+        $shops = $this->shopRepository->filter($request->all());
+
+        return ShopResource::collection($shops);
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -59,37 +55,59 @@ class ShopController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(CreateShopRequest $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'min:3', 'max:255', 'unique:shops,name'],
-            'address' => ['required', 'min:3', 'max:255'],
-            'shop_phone' => ['required', 'min:3', 'max:255'],
-            'description' => ['required', 'min:3', 'max:255'],
-            'is_open' => ['required', 'boolean'],
-            'approve_status' => ['required', 'boolean'],
-            'user_id' => ['required', 'exists:users,id'],
-        ]);
+        Gate::authorize('create', Shop::class);
 
-        $shop = $this->shopRepository->create([
-            'name' => $request->get('name'),
-            'address' => $request->get('address'),
-            'shop_phone' => $request->get('shop_phone'),
-            'description' => $request->get('description'),
-            'is_open' => $request->get('is_open'),
-            'approve_status' => $request->get('approve_status'),
-            'user_id' => $request->get('user_id'),
-        ]);
+        $result = DB::transaction(function () use ($request) {
+            $user = $this->userRepository->create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
+                'phone' => $request->phone
+            ]);
 
-        return new ShopResource($shop);
+
+            $shop = $this->shopRepository->create([
+                'user_id' => $user->id,
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'address' => $request->address,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+            ]);
+
+            if ($request->hasFile('image')) {
+                $file = $request->image;
+                $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
+                $path = 'shop_images/'. $shop->id .'/'. $filename;
+                Storage::disk('s3')->put($path, file_get_contents($file), 'private');
+                $uri = str_replace('/', '+', $path);
+                $shop->update([
+                    'image_url' => env("APP_URL") . 'api/images/' . $uri
+                ]);
+            }
+
+            Mail::to($user->email)->send(new ShopVerificationEmail($shop, $user));
+            return [
+                'user' => $user,
+                'shop' => $shop
+            ];
+        });
+        $shop = $result["shop"];
+
+        return IdResource::make($shop)->response()->setStatusCode(201);
     }
+
+
 
     /**
      * Display the specified resource.
      */
     public function show(Shop $shop)
     {
-        return new ShopResource($shop);
+        Gate::authorize('view', Shop::class);
+        return ShopResource::make($shop)->response()->setStatusCode(200);
     }
 
     /**
@@ -103,9 +121,16 @@ class ShopController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Shop $shop)
+    public function update(UpdateShopRequest $request, Shop $shop)
     {
-        //
+        Gate::authorize('update', $shop);
+        $shop->update([
+            'name' => $request->get('name'),
+            'phone' => $request->get('shop_phone'),
+            'address' => $request->get('address'),
+            'description' => $request->get('description'),
+        ]);
+        return IdResource::make($shop)->response()->setStatusCode(200);
     }
 
     /**
@@ -113,6 +138,58 @@ class ShopController extends Controller
      */
     public function destroy(Shop $shop)
     {
-        //
+        Gate::authorize('delete', $shop);
+        $shop->delete();
+    }
+
+    public function updateLocation(Request $request, int $id)
+    {
+        Gate::authorize('update', Shop::class);
+        $shop = $this->shopRepository->getById($id);
+        $shop->update([
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude
+        ]);
+        return IdResource::make($shop)->response()->setStatusCode(200);
+    }
+
+    public function updatePassword(UpdatePasswordRequest $request, Shop $shop)
+    {
+        Gate::authorize('update', $shop);
+        $new_password = $request->new_password;
+        if (Hash::check($new_password, $shop->password)) {
+            return response()->json([
+                'error' => 'New password must differ from the old'
+            ])->setStatusCode(400);
+        }
+        $shop->update([
+            'password' => Hash::make($new_password)
+        ]);
+        return IdResource::make($shop)->response()->setStatusCode(200);
+    }
+
+    public function updateAvatar(UpdateImageRequest $request, Shop $shop)
+    {
+        Gate::authorize('update', $shop);
+        if ($request->hasFile('image')) {
+            $file = $request->image;
+            $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
+            $path = 'shop_images/'. $shop->id .'/'. $filename;
+            Storage::disk('s3')->put($path, file_get_contents($file), 'private');
+            $uri = str_replace('/', '+', $path);
+            $shop->update([
+                'image_url' => env("APP_URL") . 'api/images/' . $uri
+            ]);
+        }
+        return IdResource::make($shop)->response()->setStatusCode(200);
+    }
+
+    public function updateIsOpen(Request $request, Shop $shop)
+    {
+        Gate::authorize('update', $shop);
+        $shop->update([
+            'is_open' => !$shop->is_open
+        ]);
+        return IdResource::make($shop)->response()->setStatusCode(200);
     }
 }

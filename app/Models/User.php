@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens;
@@ -24,11 +24,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'user_image_url',
-        'gender',
+        'image_url',
         'address',
-        'user_phone',
-        'birth_date',
+        'phone',
+        'login_by',
+        'email_verified_at',
+        'role'
     ];
 
     // Optionally, you can define hidden attributes like password and remember_token
@@ -56,14 +57,14 @@ class User extends Authenticatable
         ];
     }
 
-    public function shops() : HasMany
-    {
-        return $this->hasMany(Shop::class);
-    }
-
     public function queues(): BelongsToMany
     {
         return $this->belongsToMany(Queue::class, 'users_queues')->withPivot('queue_number');
+    }
+
+    public function shop(): HasOne
+    {
+        return $this->hasOne(Shop::class);
     }
 
     public function isAdmin(): bool
@@ -76,8 +77,13 @@ class User extends Authenticatable
         return $this->role === 'USER';
     }
 
-    public function isMerchant(): bool
+    public function isCustomer(): bool
     {
-        return $this->role === 'MERCHANT';
+        return $this->role === 'CUSTOMER';
+    }
+
+    public function isShop(): bool
+    {
+        return $this->role === 'SHOP';
     }
 }

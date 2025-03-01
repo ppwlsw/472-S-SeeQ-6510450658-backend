@@ -3,7 +3,9 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Auth\Events\Lockout;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -27,9 +29,20 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'email' => 'required|string|email',
+            'password' => 'required|string',
         ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Email is required',
+            'email.email' => 'Email is invalid',
+            'password.required' => 'Password is required',
+            'password.string' => 'Password must be a string',
+        ];
+
     }
 
     /**
@@ -81,5 +94,15 @@ class LoginRequest extends FormRequest
     public function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(
+            response()->json([
+                'message' => 'Validation failed',
+                'error' => $validator->errors()
+            ], 422)
+        );
     }
 }

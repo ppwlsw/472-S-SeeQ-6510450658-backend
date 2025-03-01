@@ -14,6 +14,21 @@ class ShopResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'email' => $this->user->email ?? null,
+            'is_verified' => $this->user->email_verified_at !== null,
+            'address' => $this->address,
+            'phone' => $this->phone,
+            'description' => $this->description,
+            'image_uri' => $this->image_uri,
+            'is_open' => $this->is_open,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'deleted_at' => $this->deleted_at,
+        ];
     }
 }
