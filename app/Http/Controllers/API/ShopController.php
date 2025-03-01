@@ -59,42 +59,33 @@ class ShopController extends Controller
     {
         Gate::authorize('create', Shop::class);
 
-        $result = DB::transaction(function () use ($request) {
-            $user = $this->userRepository->create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => bcrypt($request->password),
-                'phone' => $request->phone
+        $user = $this->userRepository->create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+            'phone' => $request->phone
+        ]);
+
+
+        $shop = $this->shopRepository->create([
+            'user_id' => $user->id,
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'address' => $request->address,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+        ]);
+
+        if ($request->hasFile('image')) {
+            $file = $request->image;
+            $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
+            $path = 'shop_images/'. $shop->id .'/'. $filename;
+            Storage::disk('s3')->put($path, file_get_contents($file), 'private');
+            $uri = str_replace('/', '+', $path);
+            $shop->update([
+                'image_url' => env("APP_URL") . 'api/images/' . $uri
             ]);
-
-
-            $shop = $this->shopRepository->create([
-                'user_id' => $user->id,
-                'name' => $request->name,
-                'phone' => $request->phone,
-                'address' => $request->address,
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
-            ]);
-
-            if ($request->hasFile('image')) {
-                $file = $request->image;
-                $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
-                $path = 'shop_images/'. $shop->id .'/'. $filename;
-                Storage::disk('s3')->put($path, file_get_contents($file), 'private');
-                $uri = str_replace('/', '+', $path);
-                $shop->update([
-                    'image_url' => env("APP_URL") . 'api/images/' . $uri
-                ]);
-            }
-            return [
-                'user' => $user,
-                'shop' => $shop
-            ];
-        });
-
-        $user = $result['user'];
-        $shop = $result['shop'];
+        }
 
         Mail::to($user->email)->send(new ShopVerificationEmail($shop, $user));
 
@@ -146,12 +137,14 @@ class ShopController extends Controller
 
     public function updateLocation(Request $request, int $id)
     {
-        Gate::authorize('update', Shop::class);
         $shop = $this->shopRepository->getById($id);
+
+        Gate::authorize('update', $shop);
         $shop->update([
             'latitude' => $request->latitude,
             'longitude' => $request->longitude
         ]);
+
         return IdResource::make($shop)->response()->setStatusCode(200);
     }
 
