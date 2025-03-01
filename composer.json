@@ -13,9 +13,13 @@
         "ext-redis": "*",
         "doctrine/dbal": "^4.2",
         "laravel/framework": "^11.31",
+        "laravel/horizon": "^5.30",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.18",
         "laravel/tinker": "^2.9",
+        "predis/predis": "^2.3",
+        "spatie/laravel-health": "^1.32",
+        "spatie/laravel-prometheus": "^1.2",
         "league/flysystem-aws-s3-v3": "^3.0",
         "predis/predis": "^2.0"
     },
@@ -73,7 +77,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "tbachert/spi": true
         }
     },
     "minimum-stability": "stable",
