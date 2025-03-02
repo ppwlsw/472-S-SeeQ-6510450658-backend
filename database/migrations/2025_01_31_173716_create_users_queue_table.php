@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Queue::class);
             $table->foreignIdFor(User::class );
-            $table->integer('queue_number');
+            $table->string('queue_number');
             $table->enum("status", ["canceled", "completed", "waiting"])->default("waiting");
             $table->timestamps();
         });

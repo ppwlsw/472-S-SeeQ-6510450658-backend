@@ -31,7 +31,6 @@ class ShopFactory extends Factory
             'is_open' => $this->faker->boolean,
             'latitude' => $this->faker->latitude(-90, 90),
             'longitude' => $this->faker->longitude(-180, 180),
-            'email_verified_at' => now(),
         ];
     }
 }

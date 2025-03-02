@@ -17,8 +17,8 @@ class ShopResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'email' => $this->email,
-            'is_verified' => $this->email_verified_at !== null,
+            'email' => $this->user->email ?? null,
+            'is_verified' => $this->user->email_verified_at !== null,
             'address' => $this->address,
             'phone' => $this->phone,
             'description' => $this->description,

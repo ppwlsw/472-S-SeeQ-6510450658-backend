@@ -24,7 +24,7 @@ class Reminder extends Model
         'completed_at' => 'datetime',
     ];
 
-    public function shop(): BelongsTo
+    public function shop() : BelongsTo
     {
         return $this->belongsTo(Shop::class);
     }

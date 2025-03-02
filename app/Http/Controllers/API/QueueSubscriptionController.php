@@ -7,18 +7,23 @@ use App\Http\Controllers\Controller;
 
 class QueueSubscriptionController extends Controller
 {
-    public function subscribe(Request $request)
+    public function subscribe(Request $request, $queue_id)
     {
-        $queueId = $request->query('queue_id');
+        $channel = "queue_updates:$queue_id";
 
-        return response()->stream(function () use ($queueId) {
-            $channel = "queue_updates:$queueId";
-
-            Redis::subscribe([$channel], function ($message) {
-                echo "data: " . $message . "\n\n";
+        return response()->stream(function () use ($channel) {
+            try {
+                $redis = Redis::connection();
+                $redis->subscribe([$channel], function ($message) {
+                    echo "data: " . $message . "\n\n";
+                    ob_flush();
+                    flush();
+                });
+            } catch (\Exception $e) {
+                echo "event: error\ndata: Connection error\n\n";
                 ob_flush();
                 flush();
-            });
+            }
         }, 200, [
             'Content-Type' => 'text/event-stream',
             'Cache-Control' => 'no-cache',

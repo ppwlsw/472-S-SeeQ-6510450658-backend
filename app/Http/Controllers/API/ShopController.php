@@ -11,6 +11,7 @@ use App\Http\Resources\ShopResource;
 use App\Http\Resources\IdResource;
 use App\Mail\ShopVerificationEmail;
 use App\Models\Shop;
+use App\Models\User;
 use App\Repositories\ShopRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
@@ -62,9 +63,10 @@ class ShopController extends Controller
         $result = DB::transaction(function () use ($request) {
             $user = $this->userRepository->create([
                 'name' => $request->name,
-                'email' => $request->email,
-                'password' => bcrypt($request->password),
-                'phone' => $request->phone
+                'email' => strtolower($request->email),
+                'password' => Hash::make($request->password),
+                'phone' => $request->phone,
+                'role' => 'SHOP'
             ]);
 
 
@@ -73,7 +75,6 @@ class ShopController extends Controller
                 'name' => $request->name,
                 'phone' => $request->phone,
                 'address' => $request->address,
-                'description' => $request->description,
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
             ]);
@@ -87,17 +88,18 @@ class ShopController extends Controller
                 $shop->update([
                     'image_url' => env("APP_URL") . 'api/images/' . $uri
                 ]);
+                $user->update([
+                    'image_url' => env("APP_URL") . 'api/images/' . $uri
+                ]);
             }
+
+            Mail::to($user->email)->send(new ShopVerificationEmail($shop, $user));
             return [
                 'user' => $user,
                 'shop' => $shop
             ];
         });
-
-        $user = $result['user'];
-        $shop = $result['shop'];
-
-        Mail::to($user->email)->send(new ShopVerificationEmail($shop, $user));
+        $shop = $result["shop"];
 
         return IdResource::make($shop)->response()->setStatusCode(201);
     }
@@ -112,6 +114,7 @@ class ShopController extends Controller
         Gate::authorize('view', Shop::class);
         return ShopResource::make($shop)->response()->setStatusCode(200);
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -143,6 +146,18 @@ class ShopController extends Controller
     {
         Gate::authorize('delete', $shop);
         $shop->delete();
+    }
+
+    public function updateLocation(Request $request, int $id)
+    {
+        Gate::authorize('update', Shop::class);
+        $shop = $this->shopRepository->getById($id);
+        $shop->update([
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude
+        ]);
+
+        return IdResource::make($shop)->response()->setStatusCode(200);
     }
 
     public function updatePassword(UpdatePasswordRequest $request, Shop $shop)

@@ -62,7 +62,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Queue::class, 'users_queues')->withPivot('queue_number');
     }
 
-    public function shops(): HasOne
+    public function shop(): HasOne
     {
         return $this->hasOne(Shop::class);
     }
