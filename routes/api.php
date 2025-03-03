@@ -20,7 +20,6 @@ Route::middleware('throttle:api')->group(function () {
         ];
     });
 });
-
 Route::post('auth/users/login', [UserAuthController::class, 'login'])->name('auth.user.login');
 Route::post('auth/shop/login', [ShopAuthController::class, 'login'])->name('auth.shop.login');
 Route::post('auth/users/register', [UserAuthController::class, 'register'])->name('auth.user.register');

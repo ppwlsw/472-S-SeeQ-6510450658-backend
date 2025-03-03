@@ -14,9 +14,6 @@ use Illuminate\Support\Facades\Redis;
 
 class QueueController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function __construct(
         private QueueRepository $queueRepository,
         private UserQueueRepository $userQueueRepository
@@ -32,6 +29,9 @@ class QueueController extends Controller
      */
 
 
+    /**
+     * Display a listing of the resource.
+     */
     public function index(Request $request)
     {
         $shop_id = $request->query("shop_id");
@@ -64,10 +64,6 @@ class QueueController extends Controller
         return new QueueCollection($queues);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(){}
 
     /**
      * Store a newly created resource in storage.
@@ -112,10 +108,6 @@ class QueueController extends Controller
         return new QueueResource($queue);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Queue $queue){}
     /**
      * Update the specified resource in storage.
      */
