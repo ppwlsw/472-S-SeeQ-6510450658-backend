@@ -16,7 +16,8 @@ class LoginResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'token' => $this->token
+            'token' => $this->token,
+            'role' => $this->role
         ];
     }
 }

@@ -11,6 +11,7 @@ use App\Http\Resources\ShopResource;
 use App\Http\Resources\IdResource;
 use App\Mail\ShopVerificationEmail;
 use App\Models\Shop;
+use App\Models\User;
 use App\Repositories\ShopRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
@@ -62,9 +63,10 @@ class ShopController extends Controller
         $result = DB::transaction(function () use ($request) {
             $user = $this->userRepository->create([
                 'name' => $request->name,
-                'email' => $request->email,
-                'password' => bcrypt($request->password),
-                'phone' => $request->phone
+                'email' => strtolower($request->email),
+                'password' => Hash::make($request->password),
+                'phone' => $request->phone,
+                'role' => 'SHOP'
             ]);
 
 
@@ -84,6 +86,9 @@ class ShopController extends Controller
                 Storage::disk('s3')->put($path, file_get_contents($file), 'private');
                 $uri = str_replace('/', '+', $path);
                 $shop->update([
+                    'image_url' => env("APP_URL") . 'api/images/' . $uri
+                ]);
+                $user->update([
                     'image_url' => env("APP_URL") . 'api/images/' . $uri
                 ]);
             }
@@ -109,6 +114,7 @@ class ShopController extends Controller
         Gate::authorize('view', Shop::class);
         return ShopResource::make($shop)->response()->setStatusCode(200);
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -150,6 +156,7 @@ class ShopController extends Controller
             'latitude' => $request->latitude,
             'longitude' => $request->longitude
         ]);
+
         return IdResource::make($shop)->response()->setStatusCode(200);
     }
 

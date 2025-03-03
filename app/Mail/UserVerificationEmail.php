@@ -44,7 +44,7 @@ class UserVerificationEmail extends Mailable
             view: 'emails.user.verify',
             with: [
                 'user' => $this->user,
-                'verificationLink' => url("/api/auth/users/" . $this->user->id . "/" . sha1($this->user->email) . "/verify"),
+                'verificationLink' => url("/api/auth/emails/" . $this->user->id . "/" . sha1($this->user->email) . "/verify"),
             ]
         );
     }

@@ -9,6 +9,7 @@ use App\Http\Resources\DecryptResource;
 use App\Http\Resources\LoginResource;
 use App\Http\Resources\RedirectResource;
 use App\Mail\UserVerificationEmail;
+use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -18,19 +19,22 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Socialite\Facades\Socialite;
 
-class UserAuthController extends Controller
+class AuthController extends Controller
 {
 
     public function __construct(
         private UserRepository $userRepository
-    ) {}
+    )
+    {
+    }
 
-    public function login(LoginRequest $request) {
+    public function login(LoginRequest $request)
+    {
         $email = strtolower($request->email);
         $password = $request->password;
         $user = $this->userRepository->getByEmail($email);
 
-        if (!$user  || (!$user->login_by == 'default')) {
+        if (!$user || (!$user->login_by == 'default') || !$user->email_verified_at) {
             return response()->json([
                 'error' => 'User not found or not verified'
             ])->setStatusCode(404);
@@ -38,11 +42,12 @@ class UserAuthController extends Controller
 
         if (Hash::check($password, $user->password)) {
             $token = Crypt::encrypt($user->createToken('token')->plainTextToken);
-            return LoginResource::make( (object)
-                [
+            return LoginResource::make((object)
+            [
                 'token' => $token,
-                'id' => $user->id
-                ]
+                'id' => $user->id,
+                'role' => $user->role,
+            ]
             )->response()->setStatusCode(201);
         }
 
@@ -51,47 +56,46 @@ class UserAuthController extends Controller
         ])->setStatusCode(401);
     }
 
-    public function register(RegisterRequest $request) {
+    public function register(RegisterRequest $request)
+    {
         if ($this->userRepository->getByEmail(strtolower($request->email))) {
             return response()->json([
                 'error' => 'Email already exists'
             ], 422);
         }
 
-        $result = DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request) {
             $user = $this->userRepository->create([
                 'name' => $request->name,
                 'email' => strtolower($request->email),
-                'password' => bcrypt($request->password),
+                'password' => Hash::make($request->password),
                 'phone' => $request->phone,
+                'role' => 'CUSTOMER',
             ]);
 
             if ($request->hasFile('image')) {
                 $file = $request->image;
                 $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
-                $path = 'user_images/'. $user->id .'/'. $filename;
+                $path = 'customer_images/' . $user->id . '/' . $filename;
                 Storage::disk('s3')->put($path, file_get_contents($file), 'private');
                 $uri = str_replace('/', '+', $path);
                 $user->update([
                     'image_url' => env("APP_URL") . 'api/images/' . $uri
                 ]);
             }
-            return $user;
+
+            Mail::to($user->email)->send(new UserVerificationEmail($user));
         });
-
-        $user = $result;
-
-        Mail::to($user->email)->send(new UserVerificationEmail($user));
 
         return response()->json(null, 201);
     }
 
     public function redirectToGoogle(Request $request)
     {
-        return RedirectResource::make( (object)
-            [
-                'url' => Socialite::driver('google')->stateless()->redirect()->getTargetUrl()
-            ]
+        return RedirectResource::make((object)
+        [
+            'url' => Socialite::driver('google')->stateless()->redirect()->getTargetUrl()
+        ]
         )->response()->setStatusCode(200);
     }
 
@@ -123,25 +127,30 @@ class UserAuthController extends Controller
 
     public function decrypt(Request $request)
     {
-        return DecryptResource::make( (object)
-            [
-                'plain_text' => Crypt::decrypt($request->encrypted)
-            ]
+        return DecryptResource::make((object)
+        [
+            'plain_text' => Crypt::decrypt($request->encrypted)
+        ]
         )->response()->setStatusCode(201);
     }
 
-    public function verify(int $id, String $token)
+    public function verify(User $user, string $token)
     {
-        $user = $this->userRepository->getById($id);
+        if (!$user) {
+            return response()->json([
+                'error' => 'User not found'
+            ], 404);
+        }
 
         if (!hash_equals($token, sha1($user->email)) || $user->email_verified_at) {
-            return  view('emails.user.verifystatus', ['status' => 'reject', 'path_link' => url(env('APP_USER_URL') . 'login')]);
+            return view('emails.verifystatus', [
+                'status' => 'reject',
+                'path_link' => url(env("{$user->role}_FRONTEND_URL") . 'login')]);
         }
 
         $user->email_verified_at = now();
-        $user->role = 'CUSTOMER';
         $user->save();
 
-        return view('emails.user.verifystatus', ['status' => 'success', 'path_link' => url(env('APP_USER_URL') . 'login')]);
+        return view('emails.verifystatus', ['status' => 'success', 'path_link' => url(env("{$user->role}_FRONTEND_URL") . 'login')]);
     }
 }
