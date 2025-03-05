@@ -16,13 +16,11 @@ class ShopResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'user_id' => $this->user_id,
             'name' => $this->name,
-            'email' => $this->user->email ?? null,
-            'is_verified' => $this->user->email_verified_at !== null,
             'address' => $this->address,
-            'phone' => $this->phone,
+            'image_url' => $this->image_url,
             'description' => $this->description,
-            'image_uri' => $this->image_uri,
             'is_open' => $this->is_open,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,

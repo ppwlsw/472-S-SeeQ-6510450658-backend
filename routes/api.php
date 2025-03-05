@@ -43,6 +43,7 @@ Route::get('users/{user}/shop', [UserController::class, 'showShop'])->middleware
 
 Route::get('shops/filter', [ShopController::class, 'filterShop']);
 
+Route::get('shops/location/nearby', [ShopController::class, 'showNearbyShops'])->middleware('auth:sanctum');;
 Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
 Route::put('shops/{shop}/password', [ShopController::class, 'updatePassword'])
     ->middleware('auth:sanctum')

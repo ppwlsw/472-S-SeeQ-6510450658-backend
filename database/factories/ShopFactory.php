@@ -24,13 +24,13 @@ class ShopFactory extends Factory
         return [
             'user_id' => User::where('role', 'SHOP')->inRandomOrder()->first()?->id,
             'name' => $this->faker->company,
-            'image_url' => $this->faker->imageUrl(640, 480, 'business'),
+            'image_url' => $this->faker->optional(0.3)->imageUrl(640, 480, 'business'),
             'phone' => $this->faker->phoneNumber,
             'address' => $this->faker->address,
             'description' => $this->faker->text(200),
             'is_open' => $this->faker->boolean,
-            'latitude' => $this->faker->latitude(-90, 90),
-            'longitude' => $this->faker->longitude(-180, 180),
+            'latitude' => $this->faker->latitude(13.8200, 13.8500),
+            'longitude' => $this->faker->longitude(100.5600, 100.5800),
         ];
     }
 }
