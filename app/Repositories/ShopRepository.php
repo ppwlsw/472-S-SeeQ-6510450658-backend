@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Repositories\Traits\SimpleCRUD;
 use App\Models\Shop;
+use Illuminate\Support\Facades\DB;
 
 class ShopRepository
 {
@@ -20,7 +21,7 @@ class ShopRepository
     }
 
     public function filter(array $array) {
-        $query = $this->model::query();
+        $query = $this->model::query()->withTrashed();
 
         if (isset($array['name'])) {
             $query->where('name', 'LIKE', "%$array[name]%");
@@ -41,4 +42,30 @@ class ShopRepository
         return $query->paginate(6);
 
     }
+
+    public function getAllShopWithTrashed(){
+        return (new $this->model)->withTrashed()->get();
+    }
+
+    public function getByIdWithTrashed(string $id)
+    {
+        return $this->model::withTrashed()->findOrFail($id);
+    }
+
+    public function getNearbyShops($latitude, $longitude){
+        $threshold = 2; // 2 km threshold
+
+        $nearby_shops = DB::table(DB::raw("(SELECT *,
+        (6371 * acos(
+            cos(radians($latitude)) * cos(radians(latitude))
+            * cos(radians(longitude) - radians($longitude))
+            + sin(radians($latitude)) * sin(radians(latitude))
+        )) AS distance FROM shops) as subquery"))
+            ->where("distance", "<=", $threshold)
+            ->orderBy("distance")
+            ->get();
+
+        return $nearby_shops;
+    }
+
 }

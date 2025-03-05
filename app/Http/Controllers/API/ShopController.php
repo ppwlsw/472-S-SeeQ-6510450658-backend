@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateShopRequest;
+use App\Http\Requests\NearbyShopsRequest;
 use App\Http\Requests\UpdateImageRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateShopRequest;
@@ -35,6 +36,13 @@ class ShopController extends Controller
     {
         Gate::authorize('viewAny', Shop::class);
         $shops = $this->shopRepository->getAll();
+        return ShopResource::collection($shops);
+    }
+
+    public function getAllShopWithTrashed()
+    {
+        Gate::authorize('viewAny', Shop::class);
+        $shops = $this->shopRepository->getAllShopWithTrashed();
         return ShopResource::collection($shops);
     }
 
@@ -148,10 +156,17 @@ class ShopController extends Controller
         $shop->delete();
     }
 
+    public function restore($id)
+    {
+        $shop = $this->shopRepository->getByIdWithTrashed($id);
+        $shop->restore();
+        return response()->json(['message' => 'Shop restored successfully!'])->setStatusCode(200);
+    }
+
     public function updateLocation(Request $request, int $id)
     {
-        Gate::authorize('update', Shop::class);
         $shop = $this->shopRepository->getById($id);
+        Gate::authorize('update', $shop);
         $shop->update([
             'latitude' => $request->latitude,
             'longitude' => $request->longitude
@@ -199,4 +214,29 @@ class ShopController extends Controller
         ]);
         return IdResource::make($shop)->response()->setStatusCode(200);
     }
+
+    public function showNearbyShops(NearbyShopsRequest $request)
+    {
+
+        Gate::authorize('view', Shop::class);
+
+
+        $request->validate([
+                'latitude' => 'required|numeric',
+                'longitude' => 'required|numeric',
+            ]
+        );
+
+        $latitude = $request->get('latitude');
+        $longitude = $request->get("longitude");
+
+        if (!$latitude || !$longitude) {
+            return response()->json(['message' => 'Latitude and Longitude are required'], 400);
+        }
+
+        $shops = $this->shopRepository->getNearbyShops($latitude, $longitude);
+
+        return ShopResource::collection($shops);
+    }
+
 }

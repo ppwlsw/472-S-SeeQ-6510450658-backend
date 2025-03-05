@@ -9,12 +9,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Reminder extends Model
 {
     use HasFactory;
+
     protected $fillable = [
+        'shop_id',
         'title',
         'description',
-        'reminding_time',
-        'pin',
-        'shop_id'
+        'due_date',
+        'status',
+
+    ];
+
+    protected $casts = [
+        'due_date' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     public function shop() : BelongsTo

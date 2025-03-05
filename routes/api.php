@@ -10,6 +10,7 @@ use App\Http\Controllers\API\ShopController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Resources\ReminderCollection;
 use Illuminate\Http\Request;
+use App\Http\Controllers\ReminderController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redis;
 
@@ -41,7 +42,12 @@ Route::get('users/{user}/shop', [UserController::class, 'showShop'])->middleware
 
 
 Route::get('shops/filter', [ShopController::class, 'filterShop']);
+Route::patch('shops/{id}/restore', [ShopController::class, 'restore'])->middleware('auth:sanctum')
+    ->name('shops.restore');
+Route::get('shops/withTrashed', [ShopController::class, 'getAllShopWithTrashed'])->middleware('auth:sanctum')
+    ->name('shops.withTrashed');
 
+Route::get('shops/location/nearby', [ShopController::class, 'showNearbyShops'])->middleware('auth:sanctum');;
 Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
 Route::put('shops/{shop}/password', [ShopController::class, 'updatePassword'])
     ->middleware('auth:sanctum')
@@ -67,6 +73,14 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');
+
+
+Route::get('/shops/reminders/{shop_id}', [ReminderController::class, 'show'])->name('reminders.show');
+Route::post('/shops/reminders', [ReminderController::class, 'store'])->name('reminders.store');
+Route::patch('/shops/reminders/{shop_id}', [ReminderController::class, 'markAsDone'])->name('reminders.update');
+
+
+Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');
 
     Route::apiResource('items', ItemController::class);
     Route::apiResource('reminders', ReminderCollection::class);

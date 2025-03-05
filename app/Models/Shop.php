@@ -45,4 +45,10 @@ class Shop extends Model
     public function user(): BelongsTo {
         return $this->belongsTo(User::class);
     }
+
+    public function reminders() : HasMany
+    {
+        return $this->hasMany(Reminder::class);
+    }
+
 }
