@@ -1,5 +1,6 @@
 <?php
-use App\Http\Controllers\API\Auth\UserAuthController;
+
+use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Auth\ShopAuthController;
 use App\Http\Controllers\API\ImageController;
 use App\Http\Controllers\API\ItemController;
@@ -21,14 +22,12 @@ Route::middleware('throttle:api')->group(function () {
     });
 });
 
-Route::post('auth/users/login', [UserAuthController::class, 'login'])->name('auth.user.login');
-Route::post('auth/shop/login', [ShopAuthController::class, 'login'])->name('auth.shop.login');
-Route::post('auth/users/register', [UserAuthController::class, 'register'])->name('auth.user.register');
-Route::get('auth/google', [UserAuthController::class, 'redirectToGoogle'])->name('auth.google');
-Route::get('auth/google/callback', [UserAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
-Route::post('auth/decrypt', [UserAuthController::class, 'decrypt'])->name('auth.decrypt');
-Route::get('auth/shops/{id}/{token}/verify', [ShopAuthController::class, 'verify'])->name('auth.shop.verify');
-Route::get('auth/users/{id}/{token}/verify', [UserAuthController::class, 'verify'])->name('auth.user.verify');
+Route::post('auth/login', [AuthController::class, 'login'])->name('auth.login');
+Route::post('auth/register', [AuthController::class, 'register'])->name('auth.register');
+Route::get('auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+Route::post('auth/decrypt', [AuthController::class, 'decrypt'])->name('auth.decrypt');
+Route::get('auth/emails/{user}/{token}/verify', [AuthController::class, 'verify'])->name('auth.emails.verify');
 
 Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
 Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
@@ -37,6 +36,9 @@ Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
 Route::put('users/{user}/avatar', [UserController::class, 'updateAvatar'])
     ->middleware('auth:sanctum')
     ->name('users.update.avatar');
+Route::get('users/{user}/shop', [UserController::class, 'showShop'])->middleware('auth:sanctum')
+    ->name('users.show.shop');
+
 
 Route::get('shops/filter', [ShopController::class, 'filterShop']);
 Route::patch('shops/{id}/restore', [ShopController::class, 'restore'])->middleware('auth:sanctum')
@@ -76,7 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::get('/queues/{queue_id}/subscribe', [QueueSubscriptionController::class, 'subscribe']);
 
-Route::get('redis_key', function (){
+Route::get('redis_key', function () {
     return Redis::keys("*");
 });
 
