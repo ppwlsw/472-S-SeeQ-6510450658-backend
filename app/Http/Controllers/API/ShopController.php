@@ -11,6 +11,7 @@ use App\Http\Resources\ShopResource;
 use App\Http\Resources\IdResource;
 use App\Mail\ShopVerificationEmail;
 use App\Models\Shop;
+use App\Models\User;
 use App\Repositories\ShopRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
@@ -34,6 +35,13 @@ class ShopController extends Controller
     {
         Gate::authorize('viewAny', Shop::class);
         $shops = $this->shopRepository->getAll();
+        return ShopResource::collection($shops);
+    }
+
+    public function getAllShopWithTrashed()
+    {
+        Gate::authorize('viewAny', Shop::class);
+        $shops = $this->shopRepository->getAllShopWithTrashed();
         return ShopResource::collection($shops);
     }
 
@@ -62,9 +70,10 @@ class ShopController extends Controller
         $result = DB::transaction(function () use ($request) {
             $user = $this->userRepository->create([
                 'name' => $request->name,
-                'email' => $request->email,
-                'password' => bcrypt($request->password),
-                'phone' => $request->phone
+                'email' => strtolower($request->email),
+                'password' => Hash::make($request->password),
+                'phone' => $request->phone,
+                'role' => 'SHOP'
             ]);
 
 
@@ -84,6 +93,9 @@ class ShopController extends Controller
                 Storage::disk('s3')->put($path, file_get_contents($file), 'private');
                 $uri = str_replace('/', '+', $path);
                 $shop->update([
+                    'image_url' => env("APP_URL") . 'api/images/' . $uri
+                ]);
+                $user->update([
                     'image_url' => env("APP_URL") . 'api/images/' . $uri
                 ]);
             }
@@ -109,6 +121,7 @@ class ShopController extends Controller
         Gate::authorize('view', Shop::class);
         return ShopResource::make($shop)->response()->setStatusCode(200);
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -142,10 +155,17 @@ class ShopController extends Controller
         $shop->delete();
     }
 
+    public function restore($id)
+    {
+        $shop = $this->shopRepository->getByIdWithTrashed($id);
+        $shop->restore();
+        return response()->json(['message' => 'Shop restored successfully!'])->setStatusCode(200);
+    }
+
     public function updateLocation(Request $request, int $id)
     {
-        Gate::authorize('update', Shop::class);
         $shop = $this->shopRepository->getById($id);
+        Gate::authorize('update', $shop);
         $shop->update([
             'latitude' => $request->latitude,
             'longitude' => $request->longitude

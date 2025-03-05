@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateImageRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\IdResource;
+use App\Http\Resources\ShopResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Repositories\UserRepository;
@@ -28,7 +29,7 @@ class UserController extends Controller
     public function index()
     {
         Gate::authorize('viewAny', User::class);
-        $users = $this->userRepository->getAll();
+        $users = $this->userRepository->getAllCustomer();
         return UserResource::collection($users);
     }
 
@@ -120,5 +121,22 @@ class UserController extends Controller
             ]);
         }
         return IdResource::make($user);
+    }
+
+    public function showShop(User $user)
+    {
+       if (!$user) {
+           return response()->json([
+               'error' => 'Shop not found'
+           ], 404);
+       }
+
+        $shop = $user->shop()->first();
+       if (!$shop) {
+           return response()->json([
+               'error' => 'Shop not found'
+           ], 404);
+       }
+       return ShopResource::make($shop)->response()->setStatusCode(200);
     }
 }
