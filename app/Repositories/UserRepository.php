@@ -21,4 +21,8 @@ class UserRepository
     {
         return $this->model::updateOrCreate($attributes, $values);
     }
+
+    public function getAllCustomer() {
+        return $this->model::where('role', 'CUSTOMER')->get();
+    }
 }

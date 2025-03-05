@@ -39,6 +39,13 @@ class ShopController extends Controller
         return ShopResource::collection($shops);
     }
 
+    public function getAllShopWithTrashed()
+    {
+        Gate::authorize('viewAny', Shop::class);
+        $shops = $this->shopRepository->getAllShopWithTrashed();
+        return ShopResource::collection($shops);
+    }
+
     public function filterShop(Request $request)
     {
 
@@ -149,10 +156,17 @@ class ShopController extends Controller
         $shop->delete();
     }
 
+    public function restore($id)
+    {
+        $shop = $this->shopRepository->getByIdWithTrashed($id);
+        $shop->restore();
+        return response()->json(['message' => 'Shop restored successfully!'])->setStatusCode(200);
+    }
+
     public function updateLocation(Request $request, int $id)
     {
-        Gate::authorize('update', Shop::class);
         $shop = $this->shopRepository->getById($id);
+        Gate::authorize('update', $shop);
         $shop->update([
             'latitude' => $request->latitude,
             'longitude' => $request->longitude
