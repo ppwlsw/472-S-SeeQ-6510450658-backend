@@ -21,6 +21,7 @@ class ShopResource extends JsonResource
             'address' => $this->address,
             'image_url' => $this->image_url,
             'description' => $this->description,
+            'phone' => $this->phone,
             'is_open' => $this->is_open,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,

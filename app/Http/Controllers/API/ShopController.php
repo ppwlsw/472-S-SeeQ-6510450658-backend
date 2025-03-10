@@ -140,7 +140,7 @@ class ShopController extends Controller
         Gate::authorize('update', $shop);
         $shop->update([
             'name' => $request->get('name'),
-            'phone' => $request->get('shop_phone'),
+            'phone' => $request->get('phone'),
             'address' => $request->get('address'),
             'description' => $request->get('description'),
         ]);
