@@ -73,17 +73,6 @@ class AuthController extends Controller
                 'role' => 'CUSTOMER',
             ]);
 
-            if ($request->hasFile('image')) {
-                $file = $request->image;
-                $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
-                $path = 'customer_images/' . $user->id . '/' . $filename;
-                Storage::disk('s3')->put($path, file_get_contents($file), 'private');
-                $uri = str_replace('/', '+', $path);
-                $user->update([
-                    'image_url' => env("APP_URL") . 'api/images/' . $uri
-                ]);
-            }
-
             Mail::to($user->email)->send(new UserVerificationEmail($user));
         });
 
@@ -118,7 +107,7 @@ class AuthController extends Controller
             );
             $token = Crypt::encrypt($user->createToken('token')->plainTextToken);
 
-            return redirect()->away(env("APP_USER_URL") . "login?token=" . $token, 201);
+            return redirect()->away(env("CUSTOMER_FRONTEND_URL") . "/login?token=" . $token, 201);
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Google login failed'], 500);
