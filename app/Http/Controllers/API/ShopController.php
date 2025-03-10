@@ -168,7 +168,8 @@ class ShopController extends Controller
         Gate::authorize('update', $shop);
         $shop->update([
             'latitude' => $request->latitude,
-            'longitude' => $request->longitude
+            'longitude' => $request->longitude,
+            'address' => $request->address
         ]);
 
         return IdResource::make($shop)->response()->setStatusCode(200);

@@ -29,7 +29,21 @@ class UserController extends Controller
     public function index()
     {
         Gate::authorize('viewAny', User::class);
-        $users = $this->userRepository->getAllCustomer();
+        $users = $this->userRepository->getAll();
+        return UserResource::collection($users);
+    }
+
+    public function getAllCustomerWithTrashedPaginate()
+    {
+        Gate::authorize('viewAny', User::class);
+        $users = $this->userRepository->getAllCustomerWithTrashedPaginate();
+        return UserResource::collection($users);
+    }
+
+    public function getAllCustomerWithTrashed()
+    {
+        Gate::authorize('viewAny', User::class);
+        $users = $this->userRepository->getAllCustomerWithTrashed();
         return UserResource::collection($users);
     }
 
