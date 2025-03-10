@@ -79,3 +79,4 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::get("/test/redisConnection", [QueueController::class, 'testConnection']);
+Route::get("/test/checkChannel", [QueueController::class, 'checkPublisherChannel']);

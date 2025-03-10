@@ -374,4 +374,10 @@ class QueueController extends Controller
             ], 500);
         }
     }
+
+    public function checkPublisherChannel(Request $request)
+    {
+        $channels = Redis::command('PUBSUB', ['CHANNELS']);
+        dd($channels);
+    }
 }
