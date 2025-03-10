@@ -20,7 +20,7 @@ class ShopRepository
     }
 
     public function filter(array $array) {
-        $query = $this->model::query();
+        $query = $this->model::query()->withTrashed();
 
         if (isset($array['name'])) {
             $query->where('name', 'LIKE', "%$array[name]%");
@@ -40,5 +40,14 @@ class ShopRepository
 
         return $query->paginate(6);
 
+    }
+
+    public function getAllShopWithTrashed(){
+        return (new $this->model)->withTrashed()->get();
+    }
+
+    public function getByIdWithTrashed(string $id)
+    {
+        return $this->model::withTrashed()->findOrFail($id);
     }
 }

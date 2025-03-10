@@ -37,6 +37,10 @@ Route::put('users/{user}/avatar', [UserController::class, 'updateAvatar'])
     ->name('users.update.avatar');
 
 Route::get('shops/filter', [ShopController::class, 'filterShop']);
+Route::patch('shops/{id}/restore', [ShopController::class, 'restore'])->middleware('auth:sanctum')
+    ->name('shops.restore');
+Route::get('shops/withTrashed', [ShopController::class, 'getAllShopWithTrashed'])->middleware('auth:sanctum')
+    ->name('shops.withTrashed');
 
 Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
 Route::put('shops/{shop}/password', [ShopController::class, 'updatePassword'])
