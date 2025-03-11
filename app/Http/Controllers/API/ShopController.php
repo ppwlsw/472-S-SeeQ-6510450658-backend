@@ -197,7 +197,7 @@ class ShopController extends Controller
             $file = $request->image;
             $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
             $path = 'shops/'. $shop->id .'/images/logos/'. $filename;
-            Storage::disk('s3')->put($path, file_get_contents($file), 'private');
+            Storage::disk('s3')->put($path, file_get_contents($file), 'public');
             $uri = str_replace('/', '+', $path);
             $shop->update([
                 'image_url' => env("APP_URL") . '/api/images/' . $uri
