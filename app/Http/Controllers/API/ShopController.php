@@ -159,6 +159,7 @@ class ShopController extends Controller
     public function restore($id)
     {
         $shop = $this->shopRepository->getByIdWithTrashed($id);
+        Gate::authorize('restore', $shop);
         $shop->restore();
         return response()->json(['message' => 'Shop restored successfully!'])->setStatusCode(200);
     }
@@ -169,7 +170,8 @@ class ShopController extends Controller
         Gate::authorize('update', $shop);
         $shop->update([
             'latitude' => $request->latitude,
-            'longitude' => $request->longitude
+            'longitude' => $request->longitude,
+            'address' => $request->address
         ]);
 
         return IdResource::make($shop)->response()->setStatusCode(200);

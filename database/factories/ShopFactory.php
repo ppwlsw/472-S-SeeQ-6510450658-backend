@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
+use Faker\Factory as FakerFactory;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Shop>
@@ -21,16 +22,32 @@ class ShopFactory extends Factory
 
     public function definition(): array
     {
+        $faker = FakerFactory::create('th_TH');
+        $shopTypes = [
+            'Bakery', 'Bar', 'Cafe', 'Fast Food', 'Food Truck', 'Restaurant', 'Pub', 'Yakiniku', 'Shabu',
+        ];
+        $shopDescriptions = [
+            'Bakery' => 'ร้านเบเกอรี่ที่มีขนมอบสดใหม่ เช่น ขนมปัง เค้ก และพาย',
+            'Bar' => 'บาร์ที่ให้บริการเครื่องดื่มแอลกอฮอล์และค็อกเทล พร้อมบรรยากาศชิลๆ',
+            'Cafe' => 'คาเฟ่ที่มีเมนูเครื่องดื่ม กาแฟ ขนม และบรรยากาศสบายๆ',
+            'Fast Food' => 'ร้านอาหารฟาสต์ฟู้ดที่เสิร์ฟอาหารรวดเร็ว เช่น เบอร์เกอร์ ไก่ทอด และเฟรนช์ฟรายส์',
+            'Food Truck' => 'ร้านอาหารเคลื่อนที่ที่ให้บริการอาหารสตรีทฟู้ด อร่อยและสะดวก',
+            'Restaurant' => 'ร้านอาหารที่มีเมนูหลากหลายและบรรยากาศเหมาะกับการรับประทานอาหาร',
+            'Pub' => 'ผับที่ให้บริการเครื่องดื่มและอาหาร พร้อมดนตรีสดหรือบรรยากาศสนุกสนาน',
+            'Yakiniku' => 'ร้านปิ้งย่างสไตล์ญี่ปุ่นที่ลูกค้าสามารถย่างเนื้อและผักเองได้ที่โต๊ะ',
+            'Shabu' => 'ร้านชาบูที่ให้บริการหม้อไฟและวัตถุดิบสดใหม่สำหรับการลวกในน้ำซุป',
+        ];
+
         return [
             'user_id' => User::where('role', 'SHOP')->inRandomOrder()->first()?->id,
-            'name' => $this->faker->company,
-            'image_url' => $this->faker->optional(0.3)->imageUrl(640, 480, 'business'),
-            'phone' => $this->faker->phoneNumber,
-            'address' => $this->faker->address,
-            'description' => $this->faker->text(200),
-            'is_open' => $this->faker->boolean,
-            'latitude' => $this->faker->latitude(13.8200, 13.8500),
-            'longitude' => $this->faker->longitude(100.5600, 100.5800),
+            'name' => $faker->company,
+            'image_url' => $faker->imageUrl(640, 480, 'business'),
+            'phone' => $faker->phoneNumber,
+            'address' => $faker->address,
+            'description' => $shopDescriptions[$faker->randomElement($shopTypes)],
+            'is_open' => $faker->boolean,
+            'latitude' => $faker->latitude(12, 14),
+            'longitude' => $faker->longitude(100, 104),
         ];
     }
 }

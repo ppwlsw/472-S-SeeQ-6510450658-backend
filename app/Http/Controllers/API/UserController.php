@@ -29,7 +29,21 @@ class UserController extends Controller
     public function index()
     {
         Gate::authorize('viewAny', User::class);
-        $users = $this->userRepository->getAllCustomer();
+        $users = $this->userRepository->getAll();
+        return UserResource::collection($users);
+    }
+
+    public function getAllCustomerWithTrashedPaginate()
+    {
+        Gate::authorize('viewAny', User::class);
+        $users = $this->userRepository->getAllCustomerWithTrashedPaginate();
+        return UserResource::collection($users);
+    }
+
+    public function getAllCustomerWithTrashed()
+    {
+        Gate::authorize('viewAny', User::class);
+        $users = $this->userRepository->getAllCustomerWithTrashed();
         return UserResource::collection($users);
     }
 
@@ -83,7 +97,21 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        //
+        Gate::authorize('delete', $user);
+        $user->delete();
+        return response()->json([
+            'message' => 'User deleted successfully'
+        ])->setStatusCode(200);
+    }
+
+    public function restore($id)
+    {
+        $user = $this->userRepository->getByIdWithTrashed($id);
+        Gate::authorize('restore', $user);
+        $user->restore();
+        return response()->json([
+            'message' => 'User restored successfully'
+        ])->setStatusCode(200);
     }
 
     public function updatePassword(UpdatePasswordRequest $request, User $user)
