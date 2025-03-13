@@ -158,6 +158,7 @@ class ShopController extends Controller
     public function restore($id)
     {
         $shop = $this->shopRepository->getByIdWithTrashed($id);
+        Gate::authorize('restore', $shop);
         $shop->restore();
         return response()->json(['message' => 'Shop restored successfully!'])->setStatusCode(200);
     }

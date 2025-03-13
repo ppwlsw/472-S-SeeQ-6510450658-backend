@@ -97,7 +97,21 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        //
+        Gate::authorize('delete', $user);
+        $user->delete();
+        return response()->json([
+            'message' => 'User deleted successfully'
+        ])->setStatusCode(200);
+    }
+
+    public function restore($id)
+    {
+        $user = $this->userRepository->getByIdWithTrashed($id);
+        Gate::authorize('restore', $user);
+        $user->restore();
+        return response()->json([
+            'message' => 'User restored successfully'
+        ])->setStatusCode(200);
     }
 
     public function updatePassword(UpdatePasswordRequest $request, User $user)

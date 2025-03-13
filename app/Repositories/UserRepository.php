@@ -31,4 +31,9 @@ class UserRepository
     {
         return $this->model::withTrashed()->where('role', 'CUSTOMER')->orderBy('id')->get();
     }
+
+    public function getByIdWithTrashed(string $id)
+    {
+        return $this->model::withTrashed()->findOrFail($id);
+    }
 }
