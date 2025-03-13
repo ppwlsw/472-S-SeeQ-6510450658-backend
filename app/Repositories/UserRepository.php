@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Repositories\Traits\SimpleCRUD;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 
 class UserRepository
 {
@@ -22,7 +23,17 @@ class UserRepository
         return $this->model::updateOrCreate($attributes, $values);
     }
 
-    public function getAllCustomer() {
-        return $this->model::where('role', 'CUSTOMER')->get();
+    public function getAllCustomerWithTrashedPaginate() {
+        return $this->model::withTrashed()->where('role', 'CUSTOMER')->orderBy('id')->paginate(6);
+    }
+
+    public function getAllCustomerWithTrashed(): Collection
+    {
+        return $this->model::withTrashed()->where('role', 'CUSTOMER')->orderBy('id')->get();
+    }
+
+    public function getByIdWithTrashed(string $id)
+    {
+        return $this->model::withTrashed()->findOrFail($id);
     }
 }
