@@ -21,5 +21,15 @@ class UserSeeder extends Seeder
             "role" => "ADMIN",
             "email_verified_at" => now(),
         ]);
+        for($x = 1; $x <= 5; $x++){
+            User::create([
+                "name" => "user$x",
+                "email" => "user$x@user.com",
+                "password" => Hash::make("password"),
+                "role" => "CUSTOMER",
+                "email_verified_at" => now(),
+            ]);
+        }
+
     }
 }
