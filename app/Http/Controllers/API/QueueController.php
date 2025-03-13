@@ -10,6 +10,7 @@ use App\Repositories\QueueRepository;
 use App\Repositories\UserQueueRepository;
 use App\Utils\JsonHelper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redis;
 
 class QueueController extends Controller
@@ -34,6 +35,7 @@ class QueueController extends Controller
      */
     public function index(Request $request)
     {
+        Gate::authorize("viewAny", Queue::class);
         $shop_id = $request->query("shop_id");
         //query section
         if($shop_id){
@@ -70,6 +72,7 @@ class QueueController extends Controller
      */
     public function store(Request $request)
     {
+        Gate::authorize("create", Queue::class);
         $request->validate([
             'name' => 'required',
             'description' => 'required',
@@ -92,6 +95,7 @@ class QueueController extends Controller
      */
     public function show(Queue $queue)
     {
+        Gate::authorize("viewAny", Queue::class);
         $id = $queue->id;
         $cacheKey = "queue_info:$id";
 
@@ -113,6 +117,7 @@ class QueueController extends Controller
      */
     public function update(Request $request, Queue $queue)
     {
+        Gate::authorize("update", $queue);
        $validate = $request->validate([]);
 
         if($request->isMethod("put")){
@@ -171,6 +176,7 @@ class QueueController extends Controller
 
     public function joinQueue(Request $request, $queue_id)
     {
+        Gate::authorize("viewAny", Queue::class);
         $user_id = auth()->id();
 
         $queueUserGot = $request->get("queue_user_got"); // A_02
@@ -209,6 +215,7 @@ class QueueController extends Controller
 
     public function status(Request $request, $queue_id)
     {
+        Gate::authorize("viewAny", Queue::class);
         $user_id = auth()->id();
 
         $queueUserGot = $request->get("queue_user_got"); // A_02
@@ -252,6 +259,7 @@ class QueueController extends Controller
 
     public function cancel(Request $request, $queue_id)
     {
+        Gate::authorize("viewAny", Queue::class);
         $user_id = auth()->id();
         $queueUserGot = $request->get("queue_user_got"); // A_02
         $value = "$user_id" . "_" . $queueUserGot;
@@ -291,6 +299,7 @@ class QueueController extends Controller
     public function next(Request $request, $queue_id)
     {
         $queue = $this->queueRepository->getById($queue_id);
+        Gate::authorize("nextQueue", $queue); // if in development comment this line
         if (!$queue){
             return response()->json(["message" => "Queue not found"], 404);
         }
