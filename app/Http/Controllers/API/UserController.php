@@ -141,11 +141,11 @@ class UserController extends Controller
         if ($request->hasFile('image')) {
             $file = $request->image;
             $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
-            $path = 'user_images/'. $user->id .'/'. $filename;
+            $path = 'customers/'. $user->id .'/images/avatars/'. $filename;
             Storage::disk('s3')->put($path, file_get_contents($file), 'private');
             $uri = str_replace('/', '+', $path);
             $user->update([
-                'image_url' => env("APP_URL") . 'api/images/' . $uri
+                'image_url' => env("APP_URL") . '/api/images/' . $uri
             ]);
         }
         return IdResource::make($user);
