@@ -10,6 +10,7 @@ use App\Http\Controllers\API\ShopController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Resources\ReminderCollection;
 use Illuminate\Http\Request;
+use App\Http\Controllers\ReminderController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redis;
 
@@ -54,16 +55,20 @@ Route::patch('shops/{id}/restore', [ShopController::class, 'restore'])->middlewa
 Route::get('shops/withTrashed', [ShopController::class, 'getAllShopWithTrashed'])->middleware('auth:sanctum')
     ->name('shops.withTrashed');
 
+Route::get('shops/location/nearby', [ShopController::class, 'showNearbyShops'])->middleware('auth:sanctum');;
 Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
 Route::put('shops/{shop}/password', [ShopController::class, 'updatePassword'])
     ->middleware('auth:sanctum')
     ->name('shops.update.password');
-Route::put('shops/{shop}/avatar', [ShopController::class, 'updateAvatar'])->middleware('auth:sanctum')
+Route::post('shops/{shop}/avatar', [ShopController::class, 'updateAvatar'])->middleware('auth:sanctum')
     ->name('shops.update.avatar');
 Route::put('shops/{shop}/is-open', [ShopController::class, 'updateIsOpen'])->middleware('auth:sanctum')
     ->name('shops.update.is-open');
 Route::put('shops/{id}/location', [ShopController::class, 'updateLocation'])->middleware('auth:sanctum')
     ->name('shops.update.location');
+
+Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('queues/getAllQueuesReserved', [QueueController::class, 'getQueueReserved']);
@@ -78,7 +83,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('getQueueNumber', [QueueController::class, 'getQueueNumber']);
     });
 
-    Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');
+
+
+
+Route::get('/shops/reminders/{shop_id}', [ReminderController::class, 'show'])->name('reminders.show');
+Route::post('/shops/reminders', [ReminderController::class, 'store'])->name('reminders.store');
+Route::patch('/shops/reminders/{shop_id}', [ReminderController::class, 'markAsDone'])->name('reminders.update');
+
+
 
     Route::apiResource('items', ItemController::class);
     Route::apiResource('reminders', ReminderCollection::class);
