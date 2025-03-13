@@ -29,6 +29,12 @@ Route::get('auth/google/callback', [AuthController::class, 'handleGoogleCallback
 Route::post('auth/decrypt', [AuthController::class, 'decrypt'])->name('auth.decrypt');
 Route::get('auth/emails/{user}/{token}/verify', [AuthController::class, 'verify'])->name('auth.emails.verify');
 
+Route::get('users/withTrashedPaginate', [UserController::class, 'getAllCustomerWithTrashedPaginate'])->middleware('auth:sanctum')
+    ->name('users.withTrashedPaginate');
+Route::get('users/withTrashed', [UserController::class, 'getAllCustomerWithTrashed'])->middleware('auth:sanctum')
+    ->name('users.withTrashed');
+Route::patch('users/{id}/restore', [UserController::class, 'restore'])->middleware('auth:sanctum')
+    ->name('users.restore');
 Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
 Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
     ->middleware('auth:sanctum')

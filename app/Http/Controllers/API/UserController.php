@@ -29,7 +29,21 @@ class UserController extends Controller
     public function index()
     {
         Gate::authorize('viewAny', User::class);
-        $users = $this->userRepository->getAllCustomer();
+        $users = $this->userRepository->getAll();
+        return UserResource::collection($users);
+    }
+
+    public function getAllCustomerWithTrashedPaginate()
+    {
+        Gate::authorize('viewAny', User::class);
+        $users = $this->userRepository->getAllCustomerWithTrashedPaginate();
+        return UserResource::collection($users);
+    }
+
+    public function getAllCustomerWithTrashed()
+    {
+        Gate::authorize('viewAny', User::class);
+        $users = $this->userRepository->getAllCustomerWithTrashed();
         return UserResource::collection($users);
     }
 
@@ -83,7 +97,21 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        //
+        Gate::authorize('delete', $user);
+        $user->delete();
+        return response()->json([
+            'message' => 'User deleted successfully'
+        ])->setStatusCode(200);
+    }
+
+    public function restore($id)
+    {
+        $user = $this->userRepository->getByIdWithTrashed($id);
+        Gate::authorize('restore', $user);
+        $user->restore();
+        return response()->json([
+            'message' => 'User restored successfully'
+        ])->setStatusCode(200);
     }
 
     public function updatePassword(UpdatePasswordRequest $request, User $user)
@@ -113,11 +141,11 @@ class UserController extends Controller
         if ($request->hasFile('image')) {
             $file = $request->image;
             $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
-            $path = 'user_images/'. $user->id .'/'. $filename;
+            $path = 'customers/'. $user->id .'/images/avatars/'. $filename;
             Storage::disk('s3')->put($path, file_get_contents($file), 'private');
             $uri = str_replace('/', '+', $path);
             $user->update([
-                'image_url' => env("APP_URL") . 'api/images/' . $uri
+                'image_url' => env("APP_URL") . '/api/images/' . $uri
             ]);
         }
         return IdResource::make($user);
