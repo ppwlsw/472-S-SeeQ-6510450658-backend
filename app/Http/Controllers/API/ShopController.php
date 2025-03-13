@@ -89,14 +89,14 @@ class ShopController extends Controller
             if ($request->hasFile('image')) {
                 $file = $request->image;
                 $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
-                $path = 'shop_images/'. $shop->id .'/'. $filename;
+                $path = 'shops/'. $shop->id .'/images/logos/'. $filename;
                 Storage::disk('s3')->put($path, file_get_contents($file), 'private');
                 $uri = str_replace('/', '+', $path);
                 $shop->update([
-                    'image_url' => env("APP_URL") . 'api/images/' . $uri
+                    'image_url' => env("APP_URL") . '/api/images/' . $uri
                 ]);
                 $user->update([
-                    'image_url' => env("APP_URL") . 'api/images/' . $uri
+                    'image_url' => env("APP_URL") . '/api/images/' . $uri
                 ]);
             }
 
@@ -158,6 +158,7 @@ class ShopController extends Controller
     public function restore($id)
     {
         $shop = $this->shopRepository->getByIdWithTrashed($id);
+        Gate::authorize('restore', $shop);
         $shop->restore();
         return response()->json(['message' => 'Shop restored successfully!'])->setStatusCode(200);
     }
@@ -168,7 +169,8 @@ class ShopController extends Controller
         Gate::authorize('update', $shop);
         $shop->update([
             'latitude' => $request->latitude,
-            'longitude' => $request->longitude
+            'longitude' => $request->longitude,
+            'address' => $request->address
         ]);
 
         return IdResource::make($shop)->response()->setStatusCode(200);
@@ -195,11 +197,11 @@ class ShopController extends Controller
         if ($request->hasFile('image')) {
             $file = $request->image;
             $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
-            $path = 'shop_images/'. $shop->id .'/'. $filename;
+            $path = 'shops/'. $shop->id .'/images/logos/'. $filename;
             Storage::disk('s3')->put($path, file_get_contents($file), 'private');
             $uri = str_replace('/', '+', $path);
             $shop->update([
-                'image_url' => env("APP_URL") . 'api/images/' . $uri
+                'image_url' => env("APP_URL") . '/api/images/' . $uri
             ]);
         }
         return IdResource::make($shop)->response()->setStatusCode(200);

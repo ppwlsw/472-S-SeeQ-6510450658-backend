@@ -11,12 +11,15 @@ use App\Http\Resources\RedirectResource;
 use App\Mail\UserVerificationEmail;
 use App\Models\User;
 use App\Repositories\UserRepository;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
@@ -73,17 +76,6 @@ class AuthController extends Controller
                 'role' => 'CUSTOMER',
             ]);
 
-            if ($request->hasFile('image')) {
-                $file = $request->image;
-                $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
-                $path = 'customer_images/' . $user->id . '/' . $filename;
-                Storage::disk('s3')->put($path, file_get_contents($file), 'private');
-                $uri = str_replace('/', '+', $path);
-                $user->update([
-                    'image_url' => env("APP_URL") . 'api/images/' . $uri
-                ]);
-            }
-
             Mail::to($user->email)->send(new UserVerificationEmail($user));
         });
 
@@ -118,7 +110,7 @@ class AuthController extends Controller
             );
             $token = Crypt::encrypt($user->createToken('token')->plainTextToken);
 
-            return redirect()->away(env("APP_USER_URL") . "login?token=" . $token, 201);
+            return redirect()->away(env("CUSTOMER_FRONTEND_URL") . "/login?token=" . $token, 201);
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Google login failed'], 500);
@@ -153,4 +145,66 @@ class AuthController extends Controller
 
         return view('emails.verifystatus', ['status' => 'success', 'path_link' => url(env("{$user->role}_FRONTEND_URL") . 'login')]);
     }
+
+
+    public function forgetPassword(Request $request)
+    {
+        $request->validate(['email' => 'required']);
+        $email = strtolower($request->email);
+        $user = $this->userRepository->getByEmail($email);
+
+        DB::table('password_resets')->where('email', $email)->delete();
+
+        $plainToken = Str::random(32);
+        $hashedToken = Hash::make($plainToken);
+
+        DB::table('password_resets')->insert([
+            'email' => $request->email,
+            'token' => $hashedToken,
+            'created_at' => now(),
+            'expires_at' => now()->addMinutes(30)
+        ]);
+
+        Mail::send('emails.custom_reset', ['token' => $plainToken, 'role' => $user->role], function ($message) use ($request) {
+            $message->to($request->email);
+            $message->subject('Reset Password Notification');
+        });
+
+        return response()->json(['message' => 'Password reset link sent to your email!'], 200);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required',
+            'password' => 'required',
+        ]);
+
+        $reset = DB::table('password_resets')
+            ->where('email', $request->email)
+            ->where('expires_at', '>', now())
+            ->first();
+
+        if (!$reset) {
+            return response()->json(['error' => 'Invalid or expired token'], 400);
+        }
+
+        if (!Hash::check($request->token, $reset->token)) {
+            return response()->json(['error' => 'Invalid token'], 400);
+        }
+
+        $user = User::where('email', $reset->email)->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 400);
+        }
+
+        $user->update(['password' => Hash::make($request->password)]);
+
+        DB::table('password_resets')->where('email', $reset->email)->delete();
+
+        return response()->json(['message' => 'Password has been reset successfully!'], 200);
+    }
+
 }
