@@ -28,6 +28,8 @@ Route::get('auth/google', [AuthController::class, 'redirectToGoogle'])->name('au
 Route::get('auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 Route::post('auth/decrypt', [AuthController::class, 'decrypt'])->name('auth.decrypt');
 Route::get('auth/emails/{user}/{token}/verify', [AuthController::class, 'verify'])->name('auth.emails.verify');
+Route::post('auth/reset-password', [AuthController::class, 'resetPassword'])->name('auth.reset-password');
+Route::post('auth/forget-password', [AuthController::class, 'forgetPassword'])->name('auth.forget-password');
 
 Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
 Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
