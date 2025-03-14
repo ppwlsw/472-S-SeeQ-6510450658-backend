@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('description')->nullable();
-            $table->string('queue_image_url')->nullable();
+            $table->string('image_url')->nullable();
             $table->integer('queue_counter')->default(0);
             $table->boolean('is_available')->default(true);
             $table->string('tag');
