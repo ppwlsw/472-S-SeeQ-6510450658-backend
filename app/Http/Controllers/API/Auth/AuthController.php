@@ -137,13 +137,13 @@ class AuthController extends Controller
         if (!hash_equals($token, sha1($user->email)) || $user->email_verified_at) {
             return view('emails.verifystatus', [
                 'status' => 'reject',
-                'path_link' => url(env("{$user->role}_FRONTEND_URL") . 'login')]);
+                'path_link' => url(env("{$user->role}_FRONTEND_URL") . '/login')]);
         }
 
         $user->email_verified_at = now();
         $user->save();
 
-        return view('emails.verifystatus', ['status' => 'success', 'path_link' => url(env("{$user->role}_FRONTEND_URL") . 'login')]);
+        return view('emails.verifystatus', ['status' => 'success', 'path_link' => url(env("{$user->role}_FRONTEND_URL") . '/login')]);
     }
 
 
