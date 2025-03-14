@@ -161,7 +161,7 @@ class QueueController extends Controller
      */
     public function update(Request $request, Queue $queue)
     {
-        Gate::authorize("update", $queue);
+       Gate::authorize("update", $queue);
        $validate = $request->validate([]);
 
         if($request->isMethod("put")){
