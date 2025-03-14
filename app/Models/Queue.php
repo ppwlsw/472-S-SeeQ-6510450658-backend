@@ -13,7 +13,7 @@ class Queue extends Model
     protected $fillable = [
         'name',
         'description',
-        'queue_image_url',
+        'image_url',
         'current_queue',
         'is_available',
         'tag',

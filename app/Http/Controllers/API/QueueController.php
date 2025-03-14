@@ -129,6 +129,7 @@ class QueueController extends Controller
             $queue->update([
                 'image_url' => env("APP_URL") . '/api/images/' . $uri
             ]);
+
         }
         return new QueueResource($queue);
     }
