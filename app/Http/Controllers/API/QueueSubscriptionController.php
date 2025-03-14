@@ -10,17 +10,25 @@ class QueueSubscriptionController extends Controller
     public function subscribe(Request $request, $queue_id)
     {
         $channel = "queue_updates:$queue_id";
-
         return response()->stream(function () use ($channel) {
             try {
                 $redis = Redis::connection();
-                $redis->subscribe([$channel], function ($message) {
+                $startTime = time();
+                $timeout = 30; // 30 seconds timeout
+
+                $redis->subscribe([$channel], function ($message) use ($startTime, $timeout) {
                     echo "data: " . $message . "\n\n";
                     ob_flush();
                     flush();
+
+                    // Stop after timeout
+                    if (time() - $startTime > $timeout) {
+                        exit();
+                    }
                 });
             } catch (\Exception $e) {
-                echo "event: error\ndata: Connection error\n\n";
+                echo "event: error\ndata: Connection error {$e->getMessage()}\n\n";
+                echo "event: error\ndata: Connection error $channel\n\n";
                 ob_flush();
                 flush();
             }

@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\API\Auth\AuthController;
-use App\Http\Controllers\API\Auth\ShopAuthController;
 use App\Http\Controllers\API\ImageController;
 use App\Http\Controllers\API\ItemController;
 use App\Http\Controllers\API\QueueController;
@@ -10,6 +9,7 @@ use App\Http\Controllers\API\ShopController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Resources\ReminderCollection;
 use Illuminate\Http\Request;
+use App\Http\Controllers\ReminderController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redis;
 
@@ -28,7 +28,15 @@ Route::get('auth/google', [AuthController::class, 'redirectToGoogle'])->name('au
 Route::get('auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 Route::post('auth/decrypt', [AuthController::class, 'decrypt'])->name('auth.decrypt');
 Route::get('auth/emails/{user}/{token}/verify', [AuthController::class, 'verify'])->name('auth.emails.verify');
+Route::post('auth/reset-password', [AuthController::class, 'resetPassword'])->name('auth.reset-password');
+Route::post('auth/forget-password', [AuthController::class, 'forgetPassword'])->name('auth.forget-password');
 
+Route::get('users/withTrashedPaginate', [UserController::class, 'getAllCustomerWithTrashedPaginate'])->middleware('auth:sanctum')
+    ->name('users.withTrashedPaginate');
+Route::get('users/withTrashed', [UserController::class, 'getAllCustomerWithTrashed'])->middleware('auth:sanctum')
+    ->name('users.withTrashed');
+Route::patch('users/{id}/restore', [UserController::class, 'restore'])->middleware('auth:sanctum')
+    ->name('users.restore');
 Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
 Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
     ->middleware('auth:sanctum')
@@ -36,9 +44,6 @@ Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
 Route::put('users/{user}/avatar', [UserController::class, 'updateAvatar'])
     ->middleware('auth:sanctum')
     ->name('users.update.avatar');
-Route::get('users/{user}/shop', [UserController::class, 'showShop'])->middleware('auth:sanctum')
-    ->name('users.show.shop');
-
 
 Route::get('shops/filter', [ShopController::class, 'filterShop']);
 Route::patch('shops/{id}/restore', [ShopController::class, 'restore'])->middleware('auth:sanctum')
@@ -46,16 +51,20 @@ Route::patch('shops/{id}/restore', [ShopController::class, 'restore'])->middlewa
 Route::get('shops/withTrashed', [ShopController::class, 'getAllShopWithTrashed'])->middleware('auth:sanctum')
     ->name('shops.withTrashed');
 
+Route::get('shops/location/nearby', [ShopController::class, 'showNearbyShops'])->middleware('auth:sanctum');;
 Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
 Route::put('shops/{shop}/password', [ShopController::class, 'updatePassword'])
     ->middleware('auth:sanctum')
     ->name('shops.update.password');
-Route::put('shops/{shop}/avatar', [ShopController::class, 'updateAvatar'])->middleware('auth:sanctum')
+Route::post('shops/{shop}/avatar', [ShopController::class, 'updateAvatar'])->middleware('auth:sanctum')
     ->name('shops.update.avatar');
 Route::put('shops/{shop}/is-open', [ShopController::class, 'updateIsOpen'])->middleware('auth:sanctum')
     ->name('shops.update.is-open');
 Route::put('shops/{id}/location', [ShopController::class, 'updateLocation'])->middleware('auth:sanctum')
     ->name('shops.update.location');
+
+Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('queues/getAllQueuesReserved', [QueueController::class, 'getQueueReserved']);
@@ -70,7 +79,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('getQueueNumber', [QueueController::class, 'getQueueNumber']);
     });
 
-    Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');
+
+
+
+Route::get('/shops/reminders/{shop_id}', [ReminderController::class, 'show'])->name('reminders.show');
+Route::post('/shops/reminders', [ReminderController::class, 'store'])->name('reminders.store');
+Route::patch('/shops/reminders/{shop_id}', [ReminderController::class, 'markAsDone'])->name('reminders.update');
+
+
 
     Route::apiResource('items', ItemController::class);
     Route::apiResource('reminders', ReminderCollection::class);
@@ -87,3 +103,4 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::get("/test/redisConnection", [QueueController::class, 'testConnection']);
+Route::get("/test/checkChannel", [QueueController::class, 'checkPublisherChannel']);

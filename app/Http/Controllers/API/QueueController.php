@@ -10,13 +10,11 @@ use App\Repositories\QueueRepository;
 use App\Repositories\UserQueueRepository;
 use App\Utils\JsonHelper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redis;
 
 class QueueController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function __construct(
         private QueueRepository $queueRepository,
         private UserQueueRepository $userQueueRepository
@@ -32,8 +30,12 @@ class QueueController extends Controller
      */
 
 
+    /**
+     * Display a listing of the resource.
+     */
     public function index(Request $request)
     {
+        Gate::authorize("viewAny", Queue::class);
         $shop_id = $request->query("shop_id");
         //query section
         if($shop_id){
@@ -64,16 +66,13 @@ class QueueController extends Controller
         return new QueueCollection($queues);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(){}
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
+        Gate::authorize("create", Queue::class);
         $request->validate([
             'name' => 'required',
             'description' => 'required',
@@ -96,6 +95,7 @@ class QueueController extends Controller
      */
     public function show(Queue $queue)
     {
+        Gate::authorize("viewAny", Queue::class);
         $id = $queue->id;
         $cacheKey = "queue_info:$id";
 
@@ -113,14 +113,11 @@ class QueueController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Queue $queue){}
-    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Queue $queue)
     {
+        Gate::authorize("update", $queue);
        $validate = $request->validate([]);
 
         if($request->isMethod("put")){
@@ -179,6 +176,7 @@ class QueueController extends Controller
 
     public function joinQueue(Request $request, $queue_id)
     {
+        Gate::authorize("viewAny", Queue::class);
         $user_id = auth()->id();
 
         $queueUserGot = $request->get("queue_user_got"); // A_02
@@ -217,6 +215,7 @@ class QueueController extends Controller
 
     public function status(Request $request, $queue_id)
     {
+        Gate::authorize("viewAny", Queue::class);
         $user_id = auth()->id();
 
         $queueUserGot = $request->get("queue_user_got"); // A_02
@@ -260,6 +259,7 @@ class QueueController extends Controller
 
     public function cancel(Request $request, $queue_id)
     {
+        Gate::authorize("viewAny", Queue::class);
         $user_id = auth()->id();
         $queueUserGot = $request->get("queue_user_got"); // A_02
         $value = "$user_id" . "_" . $queueUserGot;
@@ -299,6 +299,7 @@ class QueueController extends Controller
     public function next(Request $request, $queue_id)
     {
         $queue = $this->queueRepository->getById($queue_id);
+//        Gate::authorize("nextQueue", $queue); // if in development comment this line
         if (!$queue){
             return response()->json(["message" => "Queue not found"], 404);
         }
@@ -381,5 +382,11 @@ class QueueController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function checkPublisherChannel(Request $request)
+    {
+        $channels = Redis::command('PUBSUB', ['CHANNELS']);
+        dd($channels);
     }
 }

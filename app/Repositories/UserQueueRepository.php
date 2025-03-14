@@ -49,7 +49,7 @@ class UserQueueRepository
             ->select([
                 'users_queues.created_at',
                 'shops.name as shop_name',
-                'shops.shop_image_url as shop_image_url',
+                'shops.image_url as shop_image_url'
             ])
             ->get();
         return $queues;

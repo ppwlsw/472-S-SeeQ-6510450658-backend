@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateShopRequest;
+use App\Http\Requests\NearbyShopsRequest;
 use App\Http\Requests\UpdateImageRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateShopRequest;
@@ -139,7 +140,7 @@ class ShopController extends Controller
         Gate::authorize('update', $shop);
         $shop->update([
             'name' => $request->get('name'),
-            'phone' => $request->get('shop_phone'),
+            'phone' => $request->get('phone'),
             'address' => $request->get('address'),
             'description' => $request->get('description'),
         ]);
@@ -158,6 +159,7 @@ class ShopController extends Controller
     public function restore($id)
     {
         $shop = $this->shopRepository->getByIdWithTrashed($id);
+        Gate::authorize('restore', $shop);
         $shop->restore();
         return response()->json(['message' => 'Shop restored successfully!'])->setStatusCode(200);
     }
@@ -168,7 +170,8 @@ class ShopController extends Controller
         Gate::authorize('update', $shop);
         $shop->update([
             'latitude' => $request->latitude,
-            'longitude' => $request->longitude
+            'longitude' => $request->longitude,
+            'address' => $request->address
         ]);
 
         return IdResource::make($shop)->response()->setStatusCode(200);
@@ -196,7 +199,7 @@ class ShopController extends Controller
             $file = $request->image;
             $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
             $path = 'shops/'. $shop->id .'/images/logos/'. $filename;
-            Storage::disk('s3')->put($path, file_get_contents($file), 'private');
+            Storage::disk('s3')->put($path, file_get_contents($file), 'public');
             $uri = str_replace('/', '+', $path);
             $shop->update([
                 'image_url' => env("APP_URL") . '/api/images/' . $uri
@@ -213,4 +216,29 @@ class ShopController extends Controller
         ]);
         return IdResource::make($shop)->response()->setStatusCode(200);
     }
+
+    public function showNearbyShops(NearbyShopsRequest $request)
+    {
+
+        Gate::authorize('view', Shop::class);
+
+
+        $request->validate([
+                'latitude' => 'required|numeric',
+                'longitude' => 'required|numeric',
+            ]
+        );
+
+        $latitude = $request->get('latitude');
+        $longitude = $request->get("longitude");
+
+        if (!$latitude || !$longitude) {
+            return response()->json(['message' => 'Latitude and Longitude are required'], 400);
+        }
+
+        $shops = $this->shopRepository->getNearbyShops($latitude, $longitude);
+
+        return ShopResource::collection($shops);
+    }
+
 }
