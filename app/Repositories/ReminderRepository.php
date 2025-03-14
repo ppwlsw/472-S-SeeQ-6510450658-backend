@@ -14,7 +14,7 @@ class ReminderRepository
     // Add any custom repository methods here
 
     public function getAllRemindersByShopId(int $shopId){
-        return $this->model::where('shop_id', $shopId)->orderBy('due_date', 'desc')->get();
+        return $this->model::where('shop_id', $shopId)->where('status','pending')->orderBy('due_date', 'asc')->get();
     }
 
     public function markAsDone(int $id){
