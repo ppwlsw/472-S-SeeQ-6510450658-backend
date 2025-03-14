@@ -385,18 +385,12 @@ class QueueController extends Controller
 
     public function getAllQueues(Request $request, $queue_id)
     {
-        $queue = Redis::lrange("queue:$queue_id", 0, -1);
+        $usersInQueue = $this->userQueueRepository->userWaitingQueue($queue_id);
 
-        // Check if the queue is empty
-        if (empty($queue)) {
-            return response()->json([
-                "message" => "No users in the queue",
-                "Result" => $queue
-            ], 200);
-        }
 
         return response()->json([
-            "Result" => $queue, ], 200);
+            "data" => $usersInQueue
+       ], 200);
     }
 
     public function getQueueReserved(Request $request)

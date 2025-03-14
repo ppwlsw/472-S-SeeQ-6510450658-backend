@@ -106,3 +106,9 @@ Route::get('/user', function (Request $request) {
 
 Route::get("/test/redisConnection", [QueueController::class, 'testConnection']);
 Route::get("/test/checkChannel", [QueueController::class, 'checkPublisherChannel']);
+
+Route::get("/test/origin", function (Request $request) {
+    return [
+        "origin" =>$request->getSchemeAndHttpHost()
+    ];
+});

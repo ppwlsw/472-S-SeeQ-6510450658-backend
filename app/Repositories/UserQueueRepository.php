@@ -62,4 +62,20 @@ class UserQueueRepository
     public function updateStatusToComplete(int $user_id, int $queueID, string $queue_number){
         return DB::table('users_queues')->where('user_id', $user_id)->where('queue_id', $queueID)->where('queue_number', $queue_number)->update(['status' => "completed"]);
     }
+
+    public function userWaitingQueue(int $queueID){
+        $queues = DB::table('users_queues')
+            ->join('queues', 'users_queues.queue_id', '=', 'queues.id') // เชื่อมกับตาราง queues
+            ->join('users', 'users_queues.user_id', '=', 'users.id') // เชื่อมกับตาราง users
+            ->where('users_queues.queue_id', $queueID)
+            ->where("users_queues.status", "waiting")
+            ->select([
+                'queues.*',
+                'users.name as user_name',
+                'users.id as user_id',
+                'users.phone as user_phone',
+            ])
+            ->get();
+        return $queues;
+    }
 }
