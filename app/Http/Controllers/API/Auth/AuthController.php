@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -44,7 +45,7 @@ class AuthController extends Controller
         }
 
         if (Hash::check($password, $user->password)) {
-            $token = Crypt::encrypt($user->createToken('token')->plainTextToken);
+            $token = Crypt::encrypt($user->createToken('token', ['*'], now()->addDay())->plainTextToken);
             return LoginResource::make((object)
             [
                 'token' => $token,
@@ -205,6 +206,12 @@ class AuthController extends Controller
         DB::table('password_resets')->where('email', $reset->email)->delete();
 
         return response()->json(['message' => 'Password has been reset successfully!'], 200);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+        return response()->json(null, 204);
     }
 
 }

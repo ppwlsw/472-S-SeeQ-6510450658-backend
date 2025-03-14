@@ -30,6 +30,8 @@ Route::post('auth/decrypt', [AuthController::class, 'decrypt'])->name('auth.decr
 Route::get('auth/emails/{user}/{token}/verify', [AuthController::class, 'verify'])->name('auth.emails.verify');
 Route::post('auth/reset-password', [AuthController::class, 'resetPassword'])->name('auth.reset-password');
 Route::post('auth/forget-password', [AuthController::class, 'forgetPassword'])->name('auth.forget-password');
+Route::post('auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum')
+    ->name('auth.logout');
 
 Route::get('users/withTrashedPaginate', [UserController::class, 'getAllCustomerWithTrashedPaginate'])->middleware('auth:sanctum')
     ->name('users.withTrashedPaginate');
