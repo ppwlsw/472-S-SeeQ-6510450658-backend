@@ -44,6 +44,8 @@ Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
 Route::put('users/{user}/avatar', [UserController::class, 'updateAvatar'])
     ->middleware('auth:sanctum')
     ->name('users.update.avatar');
+Route::get('users/{user}/shop', [UserController::class, 'showShop'])->middleware('auth:sanctum')
+    ->name('users.show.shop');
 
 Route::get('shops/filter', [ShopController::class, 'filterShop']);
 Route::patch('shops/{id}/restore', [ShopController::class, 'restore'])->middleware('auth:sanctum')
