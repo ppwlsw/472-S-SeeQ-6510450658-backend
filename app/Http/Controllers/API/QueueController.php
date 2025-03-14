@@ -12,6 +12,15 @@ use App\Utils\JsonHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Storage;
+
+/**
+ * @OA\Info(
+ *     title="My API",
+ *     version="1.0.0",
+ * )
+ */
+
 
 class QueueController extends Controller
 {
@@ -31,7 +40,29 @@ class QueueController extends Controller
 
 
     /**
-     * Display a listing of the resource.
+     * @OA\Get(
+     *     path="/api/queues",
+     *     summary="Get list of queues",
+     *     tags={"Queues"},
+     *     @OA\Parameter(
+     *         name="shop_id",
+     *         in="query",
+     *         required=false,
+     *         description="for specific shop",
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of tables",
+     *          @OA\JsonContent (
+     *              type="object",
+     *              @OA\Property (
+     *                  property="name",
+     *                  type="string",
+     *                  description="name of queue"
+     *              )
+     *          )
+     *     )
+     * )
      */
     public function index(Request $request)
     {
@@ -86,7 +117,19 @@ class QueueController extends Controller
             'description' => $request->get('description'),
             'is_available' => $request->get('is_available'),
             'tag' => $request->get('tag'),
-            'shop_id' => $request->get('shop_id'), ]);
+            'shop_id' => $request->get('shop_id'),
+       ]);
+
+        if ($request->hasFile('image')) {
+            $file = $request->image;
+            $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
+            $path = 'queues/'. $queue->id .'/images/logos/'. $filename;
+            Storage::disk('s3')->put($path, file_get_contents($file), 'private');
+            $uri = str_replace('/', '+', $path);
+            $queue->update([
+                'image_url' => env("APP_URL") . '/api/images/' . $uri
+            ]);
+        }
         return new QueueResource($queue);
     }
 
