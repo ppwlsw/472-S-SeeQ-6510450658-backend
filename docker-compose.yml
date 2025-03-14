@@ -108,6 +108,17 @@ services:
             - grafana-data:/var/lib/grafana
         networks:
             - sail
+    subscribe-service:
+        image: thanawatptd/subscribe-service:latest
+        ports:
+            - "3001:3001"
+        environment:
+            - PORT=3001
+            - REDIS_URL=redis://redis:6379
+        restart: unless-stopped
+        networks:
+            - sail
+
 networks:
     sail:
         driver: bridge
