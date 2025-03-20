@@ -111,7 +111,7 @@ class AuthController extends Controller
             );
             $token = Crypt::encrypt($user->createToken('token')->plainTextToken);
 
-            return redirect()->away(env("CUSTOMER_FRONTEND_URL") . "/login?token=" . $token, 201);
+            return redirect()->away(env("CUSTOMER_FRONTEND_URL") . "/login?token=" . $token . "&id=" . $user->id, 201);
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Google login failed'], 500);
