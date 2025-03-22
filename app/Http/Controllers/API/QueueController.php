@@ -383,6 +383,14 @@ class QueueController extends Controller
         ]);
     }
 
+    public function getCompleteQueue(Request $request, $queue_id){
+        $user_id = auth()->id();
+        $queueNumberWithQueueInfo = $this->userQueueRepository->getCompleteQueueInfo($user_id, $queue_id);
+        return response()->json([
+            "data" =>$queueNumberWithQueueInfo
+        ]);
+    }
+
     public function getAllQueues(Request $request, $queue_id)
     {
         $usersInQueue = $this->userQueueRepository->userWaitingQueue($queue_id);
@@ -399,6 +407,18 @@ class QueueController extends Controller
         $queues = $this->userQueueRepository->getAllQueueReservedComplete($user_id);
         return response()->json([
            "data" => $queues
+        ]);
+    }
+
+    public function getShopStat(Request $request){
+        $shop_id = $request->query("shop_id");
+        $stat = $this->userQueueRepository->getShopStat($shop_id);
+        $userInQueues = $this->userQueueRepository->getUserShopStat($shop_id);
+        return response([
+            "data" => [
+                "shop_stat" => $stat,
+                "users_in_queues" => $userInQueues,
+                ]
         ]);
     }
 

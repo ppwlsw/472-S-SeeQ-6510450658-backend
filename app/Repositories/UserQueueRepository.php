@@ -28,6 +28,25 @@ class UserQueueRepository
         return $record;
     }
 
+    public function getCompleteQueueInfo(int $user_id, int $queueID){
+        $record = DB::table('users_queues')
+            ->join('queues', 'users_queues.queue_id', '=', 'queues.id') // เชื่อมกับตาราง queues
+            ->join('shops', 'queues.shop_id', '=', 'shops.id') // เชื่อมกับตาราง shops
+            ->where('users_queues.user_id', $user_id)
+            ->where('users_queues.queue_id', $queueID)
+            ->where('users_queues.status', "completed")
+            ->select([
+                'users_queues.*',
+                'queues.name as queue_name',
+                'queues.tag as queue_tag',
+                'shops.name as shop_name',
+                'shops.description as shop_description',
+            ])
+            ->first();
+
+        return $record;
+    }
+
     public function create(array $attributes){
         $now = now();
         $attributes["created_at"] = $now;
@@ -47,6 +66,7 @@ class UserQueueRepository
             ->where('users_queues.user_id', $user_id)
             ->where("users_queues.status", "completed")
             ->select([
+                'users_queues.queue_id',
                 'users_queues.created_at',
                 'shops.name as shop_name',
                 'shops.image_url as shop_image_url'
@@ -75,6 +95,41 @@ class UserQueueRepository
                 'users.id as user_id',
                 'users.phone as user_phone',
             ])
+            ->get();
+        return $queues;
+    }
+
+    public function getShopStat($shop_id)
+    {
+        $queues = DB::table('users_queues as uq')
+            ->join('queues as q', 'uq.queue_id', '=', 'q.id')
+            ->select(
+                'q.shop_id',
+                DB::raw('COUNT(uq.id) AS total_queues'),
+                DB::raw("SUM(CASE WHEN uq.status = 'waiting' THEN 1 ELSE 0 END) AS waiting_count"),
+                DB::raw("SUM(CASE WHEN uq.status = 'completed' THEN 1 ELSE 0 END) AS completed_count"),
+                DB::raw("SUM(CASE WHEN uq.status = 'canceled' THEN 1 ELSE 0 END) AS canceled_count")
+            )
+            ->where('q.shop_id', $shop_id)
+            ->groupBy('q.shop_id')
+            ->orderBy('q.shop_id')
+            ->get();
+        return $queues;
+    }
+
+    public function getUserShopStat($shop_id){
+        $queues = DB::table('users_queues as uq')
+            ->join('queues as q', 'uq.queue_id', '=', 'q.id')
+            ->join('users as u', 'uq.user_id', '=', 'u.id')
+            ->select(
+                'uq.queue_number',
+                'u.name as customer_name',  // ชื่อคนจอง
+                'uq.status',
+                'u.phone as phone_number',  // เบอร์โทร
+                'q.shop_id'
+            )
+            ->where('q.shop_id', $shop_id) // กรองเฉพาะ shop_id ที่กำหนด
+            ->orderBy('uq.queue_number') // เรียงตาม queue_number
             ->get();
         return $queues;
     }
