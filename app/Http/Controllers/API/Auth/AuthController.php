@@ -96,6 +96,10 @@ class AuthController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
+            $existUser = $this->userRepository->getByEmail($googleUser->getEmail());
+            if ($existUser && ($existUser->role != 'CUSTOMER')) {
+                return redirect()->away(env("CUSTOMER_FRONTEND_URL") . "/login?error=invalid", 201);
+            }
             $user = $this->userRepository->updateOrCreate(
                 [
                     'email' => $googleUser->email
@@ -111,7 +115,7 @@ class AuthController extends Controller
             );
             $token = Crypt::encrypt($user->createToken('token')->plainTextToken);
 
-            return redirect()->away(env("CUSTOMER_FRONTEND_URL") . "/login?token=" . $token . "&id=" . $user->id, 201);
+            return redirect()->away(env("CUSTOMER_FRONTEND_URL") . "/login?token=" . $token . "&id=" . $user->id . "&role=" . $user->role, 201);
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Google login failed'], 500);
