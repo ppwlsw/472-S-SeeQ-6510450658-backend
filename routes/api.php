@@ -43,7 +43,7 @@ Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
 Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
     ->middleware('auth:sanctum')
     ->name('users.update.password');
-Route::put('users/{user}/avatar', [UserController::class, 'updateAvatar'])
+Route::post('users/{user}/avatar', [UserController::class, 'updateAvatar'])
     ->middleware('auth:sanctum')
     ->name('users.update.avatar');
 Route::get('users/{user}/shop', [UserController::class, 'showShop'])->middleware('auth:sanctum')
