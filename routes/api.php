@@ -73,6 +73,7 @@ Route::get('images/{image}', [ImageController::class, 'show'])->name('images.sho
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('queues/getAllQueuesReserved', [QueueController::class, 'getQueueReserved']);
     Route::get('queues/getShopStat', [QueueController::class, 'getShopStat']);
+    Route::get('queues/getAllQueuesAllShops', [QueueController::class, 'getAllQueuesAllShops']);
     Route::apiResource('queues', QueueController::class);
 
     Route::prefix('queues/{queue_id}')->group(function () {

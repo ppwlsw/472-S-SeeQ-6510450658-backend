@@ -133,4 +133,18 @@ class UserQueueRepository
             ->get();
         return $queues;
     }
+
+    public function getAllQueuesAllShops(){
+        $queues = DB::table('users_queues')
+            ->join('queues', 'users_queues.queue_id', '=', 'queues.id')
+            ->join('users', 'users_queues.user_id', '=', 'users.id')
+            ->select([
+                'queues.*',
+                'users.name as user_name',
+                'users.email as user_email',
+                'users_queues.status as status',
+            ])
+            ->get();
+        return $queues;
+    }
 }

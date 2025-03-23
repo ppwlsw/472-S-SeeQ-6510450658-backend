@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\IdResource;
+use App\Http\Resources\QueueAdminCollection;
+use App\Http\Resources\QueueAdminResource;
 use App\Http\Resources\QueueCollection;
 use App\Http\Resources\QueueResource;
 use App\Models\Queue;
@@ -399,6 +402,15 @@ class QueueController extends Controller
         return response()->json([
             "data" => $usersInQueue
        ], 200);
+    }
+
+    public function getAllQueuesAllShops(Request $request)
+    {
+        $queues = $this->userQueueRepository->getAllQueuesAllShops();
+
+        return response()->json([
+            "data" => $queues
+        ]);
     }
 
     public function getQueueReserved(Request $request)
