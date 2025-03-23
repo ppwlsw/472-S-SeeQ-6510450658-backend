@@ -8,6 +8,7 @@ use App\Http\Requests\NearbyShopsRequest;
 use App\Http\Requests\UpdateImageRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateShopRequest;
+use App\Http\Resources\ImageUrlResource;
 use App\Http\Resources\ShopResource;
 use App\Http\Resources\IdResource;
 use App\Mail\ShopVerificationEmail;
@@ -205,8 +206,9 @@ class ShopController extends Controller
                 'image_url' => env("APP_URL") . '/api/images/' . $uri
             ]);
         }
-        return IdResource::make($shop)->response()->setStatusCode(200);
+        return ImageUrlResource::make($shop);
     }
+
 
     public function updateIsOpen(Request $request, Shop $shop)
     {
