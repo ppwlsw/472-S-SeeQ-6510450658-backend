@@ -39,7 +39,15 @@ class ShopFactory extends Factory
         ];
 
         return [
-            'user_id' => User::where('role', 'SHOP')->inRandomOrder()->first()?->id,
+            'user_id' => function () {
+                return User::where('role', 'SHOP')
+                    ->whereNotIn('id', function ($query) {
+                        $query->select('user_id')->from('shops')->whereNotNull('user_id');
+                    })
+                    ->inRandomOrder()
+                    ->first()
+                    ?->id;
+            },
             'name' => $faker->company,
             'image_url' => $faker->imageUrl(640, 480, 'business'),
             'phone' => $faker->phoneNumber,
