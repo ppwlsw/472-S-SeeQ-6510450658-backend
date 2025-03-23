@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\IdResource;
+use App\Http\Resources\QueueAdminCollection;
+use App\Http\Resources\QueueAdminResource;
 use App\Http\Resources\QueueCollection;
 use App\Http\Resources\QueueResource;
 use App\Models\Queue;
@@ -383,6 +386,14 @@ class QueueController extends Controller
         ]);
     }
 
+    public function getCompleteQueue(Request $request, $queue_id){
+        $user_id = auth()->id();
+        $queueNumberWithQueueInfo = $this->userQueueRepository->getCompleteQueueInfo($user_id, $queue_id);
+        return response()->json([
+            "data" =>$queueNumberWithQueueInfo
+        ]);
+    }
+
     public function getAllQueues(Request $request, $queue_id)
     {
         $usersInQueue = $this->userQueueRepository->userWaitingQueue($queue_id);
@@ -393,12 +404,33 @@ class QueueController extends Controller
        ], 200);
     }
 
+    public function getAllQueuesAllShops(Request $request)
+    {
+        $queues = $this->userQueueRepository->getAllQueuesAllShops();
+
+        return response()->json([
+            "data" => $queues
+        ]);
+    }
+
     public function getQueueReserved(Request $request)
     {
         $user_id = auth()->id();
         $queues = $this->userQueueRepository->getAllQueueReservedComplete($user_id);
         return response()->json([
            "data" => $queues
+        ]);
+    }
+
+    public function getShopStat(Request $request){
+        $shop_id = $request->query("shop_id");
+        $stat = $this->userQueueRepository->getShopStat($shop_id);
+        $userInQueues = $this->userQueueRepository->getUserShopStat($shop_id);
+        return response([
+            "data" => [
+                "shop_stat" => $stat,
+                "users_in_queues" => $userInQueues,
+                ]
         ]);
     }
 
