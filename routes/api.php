@@ -57,16 +57,13 @@ Route::get('shops/withTrashed', [ShopController::class, 'getAllShopWithTrashed']
 
 Route::get('shops/location/nearby', [ShopController::class, 'showNearbyShops'])->middleware('auth:sanctum');;
 Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
-Route::put('shops/{shop}/password', [ShopController::class, 'updatePassword'])
-    ->middleware('auth:sanctum')
-    ->name('shops.update.password');
 Route::post('shops/{shop}/avatar', [ShopController::class, 'updateAvatar'])->middleware('auth:sanctum')
     ->name('shops.update.avatar');
 Route::put('shops/{shop}/is-open', [ShopController::class, 'updateIsOpen'])->middleware('auth:sanctum')
     ->name('shops.update.is-open');
 Route::put('shops/{id}/location', [ShopController::class, 'updateLocation'])->middleware('auth:sanctum')
     ->name('shops.update.location');
-Route::post('shops/{shop}/item}', [ShopController::class, 'storeItem'])->middleware('auth:sanctum')
+Route::post('shops/{shop}/item', [ShopController::class, 'storeItem'])->middleware('auth:sanctum')
     ->name('shops.store.item');
 Route::put('shops/{shop}/item', [ShopController::class, 'updateItem'])->middleware('auth:sanctum')
     ->name('shops.update.item');

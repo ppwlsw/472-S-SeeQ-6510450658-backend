@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('items', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Shop::class);
-            $table->string('api_url');
+            $table->string('api_url')->unique();
             $table->string('token');
             $table->timestamps();
             $table->softDeletes();

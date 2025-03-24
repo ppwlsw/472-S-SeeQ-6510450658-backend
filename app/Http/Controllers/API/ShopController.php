@@ -181,21 +181,6 @@ class ShopController extends Controller
         return IdResource::make($shop)->response()->setStatusCode(200);
     }
 
-    public function updatePassword(UpdatePasswordRequest $request, Shop $shop)
-    {
-        Gate::authorize('update', $shop);
-        $new_password = $request->new_password;
-        if (Hash::check($new_password, $shop->password)) {
-            return response()->json([
-                'error' => 'New password must differ from the old'
-            ])->setStatusCode(400);
-        }
-        $shop->update([
-            'password' => Hash::make($new_password)
-        ]);
-        return IdResource::make($shop)->response()->setStatusCode(200);
-    }
-
     public function updateAvatar(UpdateImageRequest $request, Shop $shop)
     {
         Gate::authorize('update', $shop);
@@ -259,20 +244,24 @@ class ShopController extends Controller
     {
         Gate::authorize('create', Shop::class);
         $shop->item()->create([
-            'url' => $request->get('api_url'),
+            'api_url' => $request->get('api_url'),
             'token' => $request->get('api_token')
         ]);
-        return response()->setStatusCode(201);
+        return response([
+            'data' => []
+        ])->setStatusCode(201);
     }
 
     public function updateItem(UpdateItemRequest $request, Shop $shop)
     {
-        Gate::authorize('update', Shop::class);
+        Gate::authorize('update', $shop);
         $shop->item()->update([
-            'url' => $request->get('api_url'),
+            'api_url' => $request->get('api_url'),
             'token' => $request->get('api_token')
         ]);
-        return response()->setStatusCode(200);
+        return response([
+            'data' => []
+        ])->setStatusCode(200);
     }
 
 }
