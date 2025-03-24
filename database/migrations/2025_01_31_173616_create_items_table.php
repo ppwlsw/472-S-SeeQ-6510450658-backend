@@ -14,13 +14,10 @@ return new class extends Migration
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('description')->nullable();
-            $table->string('item_image_url')->nullable();
-            $table->float('price');
-            $table->boolean('is_available');
             $table->foreignIdFor(Shop::class);
+            $table->string('api_url');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

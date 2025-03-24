@@ -5,12 +5,14 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateShopRequest;
 use App\Http\Requests\NearbyShopsRequest;
+use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateImageRequest;
+use App\Http\Requests\UpdateItemRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateShopRequest;
-use App\Http\Resources\ImageUrlResource;
 use App\Http\Resources\ShopResource;
 use App\Http\Resources\IdResource;
+use App\Http\Resources\UrlResource;
 use App\Mail\ShopVerificationEmail;
 use App\Models\Shop;
 use App\Models\User;
@@ -206,7 +208,9 @@ class ShopController extends Controller
                 'image_url' => env("APP_URL") . '/api/images/' . $uri
             ]);
         }
-        return ImageUrlResource::make($shop);
+        return UrlResource::make((object)[
+            'url' => $shop->image_url
+        ]);
     }
 
 
@@ -241,6 +245,33 @@ class ShopController extends Controller
         $shops = $this->shopRepository->getNearbyShops($latitude, $longitude);
 
         return ShopResource::collection($shops);
+    }
+
+    public function showItem(Request $request, Shop $shop)
+    {
+        Gate::authorize('view', $shop);
+        $item = $shop->item()->first();
+        return UrlResource::make((object) [
+            'url' => $item->api_url
+        ])->response()->setStatusCode(200);
+    }
+
+    public function storeItem(StoreItemRequest $request, Shop $shop)
+    {
+        Gate::authorize('create', Shop::class);
+        $shop->item()->create([
+            'api_url' => $request->get('api_url'),
+        ]);
+        return response()->setStatusCode(201);
+    }
+
+    public function updateItem(UpdateItemRequest $request, Shop $shop)
+    {
+        Gate::authorize('update', Shop::class);
+        $shop->item()->update([
+            'api_url' => $request->get('api_url'),
+        ]);
+        return response()->setStatusCode(200);
     }
 
 }

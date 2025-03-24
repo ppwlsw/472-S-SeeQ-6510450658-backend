@@ -66,6 +66,12 @@ Route::put('shops/{shop}/is-open', [ShopController::class, 'updateIsOpen'])->mid
     ->name('shops.update.is-open');
 Route::put('shops/{id}/location', [ShopController::class, 'updateLocation'])->middleware('auth:sanctum')
     ->name('shops.update.location');
+Route::post('shops/{shop}/item}', [ShopController::class, 'storeItem'])->middleware('auth:sanctum')
+    ->name('shops.store.item');
+Route::put('shops/{shop}/item', [ShopController::class, 'updateItem'])->middleware('auth:sanctum')
+    ->name('shops.update.item');
+Route::get('shops/{shop}/item', [ShopController::class, 'showItem'])->middleware('auth:sanctum')
+    ->name('shops.show.item');
 
 Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');
 
@@ -95,7 +101,6 @@ Route::patch('/shops/reminders/{shop_id}', [ReminderController::class, 'markAsDo
 
 
 
-    Route::apiResource('items', ItemController::class);
     Route::apiResource('reminders', ReminderCollection::class);
 });
 
