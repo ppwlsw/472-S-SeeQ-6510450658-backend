@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateImageRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\IdResource;
+use App\Http\Resources\ImageUrlResource;
 use App\Http\Resources\ShopResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
@@ -148,7 +149,7 @@ class UserController extends Controller
                 'image_url' => env("APP_URL") . '/api/images/' . $uri
             ]);
         }
-        return IdResource::make($user);
+        return ImageUrlResource::make($user);
     }
 
     public function showShop(User $user)

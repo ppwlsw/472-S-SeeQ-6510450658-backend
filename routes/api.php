@@ -43,7 +43,7 @@ Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
 Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
     ->middleware('auth:sanctum')
     ->name('users.update.password');
-Route::put('users/{user}/avatar', [UserController::class, 'updateAvatar'])
+Route::post('users/{user}/avatar', [UserController::class, 'updateAvatar'])
     ->middleware('auth:sanctum')
     ->name('users.update.avatar');
 Route::get('users/{user}/shop', [UserController::class, 'showShop'])->middleware('auth:sanctum')
@@ -74,6 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('queues/getAllQueuesReserved', [QueueController::class, 'getQueueReserved']);
     Route::get('queues/getQueueReservedWaiting', [QueueController::class, 'getQueueReservedWaiting']);
     Route::get('queues/getShopStat', [QueueController::class, 'getShopStat']);
+    Route::get('queues/getAllQueuesAllShops', [QueueController::class, 'getAllQueuesAllShops']);
     Route::apiResource('queues', QueueController::class);
 
     Route::prefix('queues/{queue_id}')->group(function () {
