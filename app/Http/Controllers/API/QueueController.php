@@ -422,6 +422,14 @@ class QueueController extends Controller
         ]);
     }
 
+    public function getQueueReservedWaiting(Request $request){
+        $user_id = auth()->id();
+        $queues = $this->userQueueRepository->getAllQueueReservedWaiting($user_id);
+        return response()->json([
+            "data" => $queues
+        ]);
+    }
+
     public function getShopStat(Request $request){
         $shop_id = $request->query("shop_id");
         $stat = $this->userQueueRepository->getShopStat($shop_id);

@@ -75,6 +75,22 @@ class UserQueueRepository
         return $queues;
     }
 
+    public function getAllQueueReservedWaiting(int $user_id){
+        $queues = DB::table('users_queues')
+            ->join('queues', 'users_queues.queue_id', '=', 'queues.id') // เชื่อมกับตาราง queues
+            ->join('shops', 'queues.shop_id', '=', 'shops.id') // เชื่อมกับตาราง shops
+            ->where('users_queues.user_id', $user_id)
+            ->where("users_queues.status", "waiting")
+            ->select([
+                'users_queues.queue_id',
+                'users_queues.status',
+                'shops.name as shop_name',
+                'shops.image_url as shop_image_url'
+            ])
+            ->get();
+        return $queues;
+    }
+
     public function updateStatusToCancel(int $user_id, int $queueID, string $queue_number){
         return DB::table('users_queues')->where('user_id', $user_id)->where('queue_id', $queueID)->where('queue_number', $queue_number)->update(['status' => "canceled"]);
     }
