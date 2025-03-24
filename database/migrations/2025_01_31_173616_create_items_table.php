@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Shop::class);
             $table->string('api_url');
+            $table->string('token');
             $table->timestamps();
             $table->softDeletes();
         });

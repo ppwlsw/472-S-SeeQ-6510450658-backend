@@ -10,6 +10,7 @@ use App\Http\Requests\UpdateImageRequest;
 use App\Http\Requests\UpdateItemRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateShopRequest;
+use App\Http\Resources\ItemResource;
 use App\Http\Resources\ShopResource;
 use App\Http\Resources\IdResource;
 use App\Http\Resources\UrlResource;
@@ -251,16 +252,15 @@ class ShopController extends Controller
     {
         Gate::authorize('view', $shop);
         $item = $shop->item()->first();
-        return UrlResource::make((object) [
-            'url' => $item->api_url
-        ])->response()->setStatusCode(200);
+        return ItemResource::make($item)->response()->setStatusCode(200);
     }
 
     public function storeItem(StoreItemRequest $request, Shop $shop)
     {
         Gate::authorize('create', Shop::class);
         $shop->item()->create([
-            'api_url' => $request->get('api_url'),
+            'url' => $request->get('api_url'),
+            'token' => $request->get('api_token')
         ]);
         return response()->setStatusCode(201);
     }
@@ -269,7 +269,8 @@ class ShopController extends Controller
     {
         Gate::authorize('update', Shop::class);
         $shop->item()->update([
-            'api_url' => $request->get('api_url'),
+            'url' => $request->get('api_url'),
+            'token' => $request->get('api_token')
         ]);
         return response()->setStatusCode(200);
     }

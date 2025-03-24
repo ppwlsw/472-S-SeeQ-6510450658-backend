@@ -19,14 +19,18 @@ class StoreItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'api_url' => 'nullable|string',
+            'api_url' => 'required|string',
+            'api_token' => 'required|string',
         ];
     }
 
     public function messages(): array
     {
         return [
+            'api_url.required' => 'API URL is required.',
             'api_url.string' => 'API URL must be a string.',
+            'api_token.required' => 'API token is required.',
+            'api_token.string' => 'API token must be a string.',
         ];
     }
 }

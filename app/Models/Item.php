@@ -13,7 +13,8 @@ class Item extends Model
 
     protected $fillable = [
         'shop_id',
-        'api_url'
+        'api_url',
+        'token'
     ];
 
     public function shop(): BelongsTo
