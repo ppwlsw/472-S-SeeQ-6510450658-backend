@@ -46,6 +46,13 @@ class UserController extends Controller
     {
         Gate::authorize('viewAny', User::class);
         $users = $this->userRepository->getAllCustomerWithTrashed();
+
+        if ($users->isEmpty()) {
+            return response()->json([
+                'message' => 'No customer found'
+            ])->setStatusCode(404);
+        }
+
         return UserResource::collection($users);
     }
 
