@@ -20,7 +20,6 @@ class DatabaseSeeder extends Seeder
             ShopSeeder::class,
             ReminderSeeder::class,
             QueueSeeder::class,
-            ItemSeeder::class,
         ]);
     }
 }

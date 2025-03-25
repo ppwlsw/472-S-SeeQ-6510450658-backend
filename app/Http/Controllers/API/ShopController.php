@@ -5,12 +5,15 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateShopRequest;
 use App\Http\Requests\NearbyShopsRequest;
+use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateImageRequest;
+use App\Http\Requests\UpdateItemRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateShopRequest;
-use App\Http\Resources\ImageUrlResource;
+use App\Http\Resources\ItemResource;
 use App\Http\Resources\ShopResource;
 use App\Http\Resources\IdResource;
+use App\Http\Resources\UrlResource;
 use App\Mail\ShopVerificationEmail;
 use App\Models\Shop;
 use App\Models\User;
@@ -178,21 +181,6 @@ class ShopController extends Controller
         return IdResource::make($shop)->response()->setStatusCode(200);
     }
 
-    public function updatePassword(UpdatePasswordRequest $request, Shop $shop)
-    {
-        Gate::authorize('update', $shop);
-        $new_password = $request->new_password;
-        if (Hash::check($new_password, $shop->password)) {
-            return response()->json([
-                'error' => 'New password must differ from the old'
-            ])->setStatusCode(400);
-        }
-        $shop->update([
-            'password' => Hash::make($new_password)
-        ]);
-        return IdResource::make($shop)->response()->setStatusCode(200);
-    }
-
     public function updateAvatar(UpdateImageRequest $request, Shop $shop)
     {
         Gate::authorize('update', $shop);
@@ -206,7 +194,9 @@ class ShopController extends Controller
                 'image_url' => env("APP_URL") . '/api/images/' . $uri
             ]);
         }
-        return ImageUrlResource::make($shop);
+        return UrlResource::make((object)[
+            'url' => $shop->image_url
+        ]);
     }
 
 
@@ -241,6 +231,37 @@ class ShopController extends Controller
         $shops = $this->shopRepository->getNearbyShops($latitude, $longitude);
 
         return ShopResource::collection($shops);
+    }
+
+    public function showItem(Request $request, Shop $shop)
+    {
+        Gate::authorize('view', $shop);
+        $item = $shop->item()->first();
+        return ItemResource::make($item)->response()->setStatusCode(200);
+    }
+
+    public function storeItem(StoreItemRequest $request, Shop $shop)
+    {
+        Gate::authorize('create', Shop::class);
+        $shop->item()->create([
+            'api_url' => $request->get('api_url'),
+            'token' => $request->get('api_token')
+        ]);
+        return response([
+            'data' => []
+        ])->setStatusCode(201);
+    }
+
+    public function updateItem(UpdateItemRequest $request, Shop $shop)
+    {
+        Gate::authorize('update', $shop);
+        $shop->item()->update([
+            'api_url' => $request->get('api_url'),
+            'token' => $request->get('api_token')
+        ]);
+        return response([
+            'data' => []
+        ])->setStatusCode(200);
     }
 
 }

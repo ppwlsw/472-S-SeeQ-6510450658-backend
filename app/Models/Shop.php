@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 
@@ -33,11 +34,6 @@ class Shop extends Model
         'longitude',
     ];
 
-    public function items() : hasMany
-    {
-        return $this->hasMany(Item::class);
-    }
-
     public function queues() : hasMany {
         return $this->hasMany(Queue::class);
     }
@@ -49,6 +45,11 @@ class Shop extends Model
     public function reminders() : HasMany
     {
         return $this->hasMany(Reminder::class);
+    }
+
+    public function item(): HasOne
+    {
+        return $this->hasOne(Item::class);
     }
 
 }
