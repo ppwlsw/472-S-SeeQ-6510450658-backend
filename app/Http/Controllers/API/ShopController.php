@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateItemRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateShopRequest;
 use App\Http\Resources\ItemResource;
+use App\Http\Resources\SearchShopResource;
 use App\Http\Resources\ShopResource;
 use App\Http\Resources\IdResource;
 use App\Http\Resources\UrlResource;
@@ -296,6 +297,35 @@ class ShopController extends Controller
                 'id' => $shop->item()->first()->id,
             ]
         ])->setStatusCode(200);
+    }
+
+    public function searchShops(Request $request)
+    {
+        $request->validate([
+            'key' => 'nullable|string',
+            'page' => 'nullable|integer|min:1',
+        ]);
+
+        $query = Shop::with('queues');
+
+        if ($request->filled('key')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->key . '%')
+                    ->orWhere('description', 'like', '%' . $request->key . '%');
+            });
+        }
+
+        $shops = $query->paginate(5);
+
+        return response()->json([
+            'shops' => SearchShopResource::collection($shops),
+            'pagination' => [
+                'current_page' => $shops->currentPage(),
+                'total_pages' => $shops->lastPage(),
+                'total_items' => $shops->total(),
+                'items_per_page' => $shops->perPage(),
+            ]
+        ]);
     }
 
 }
