@@ -39,7 +39,7 @@ class ShopFactory extends Factory
         ];
 
         return [
-            'user_id' => User::where('role', 'SHOP')->inRandomOrder()->first()?->id,
+            'user_id' =>  fake()->unique()->randomElement(User::all()->where('role', 'SHOP')->pluck('id')->toArray()),
             'name' => $faker->company,
             'image_url' => $faker->imageUrl(640, 480, 'business'),
             'phone' => $faker->phoneNumber,

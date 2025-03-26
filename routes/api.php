@@ -43,7 +43,7 @@ Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
 Route::put('users/{user}/password', [UserController::class, 'updatePassword'])
     ->middleware('auth:sanctum')
     ->name('users.update.password');
-Route::put('users/{user}/avatar', [UserController::class, 'updateAvatar'])
+Route::post('users/{user}/avatar', [UserController::class, 'updateAvatar'])
     ->middleware('auth:sanctum')
     ->name('users.update.avatar');
 Route::get('users/{user}/shop', [UserController::class, 'showShop'])->middleware('auth:sanctum')
@@ -57,22 +57,27 @@ Route::get('shops/withTrashed', [ShopController::class, 'getAllShopWithTrashed']
 
 Route::get('shops/location/nearby', [ShopController::class, 'showNearbyShops'])->middleware('auth:sanctum');;
 Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
-Route::put('shops/{shop}/password', [ShopController::class, 'updatePassword'])
-    ->middleware('auth:sanctum')
-    ->name('shops.update.password');
 Route::post('shops/{shop}/avatar', [ShopController::class, 'updateAvatar'])->middleware('auth:sanctum')
     ->name('shops.update.avatar');
 Route::put('shops/{shop}/is-open', [ShopController::class, 'updateIsOpen'])->middleware('auth:sanctum')
     ->name('shops.update.is-open');
 Route::put('shops/{id}/location', [ShopController::class, 'updateLocation'])->middleware('auth:sanctum')
     ->name('shops.update.location');
+Route::post('shops/{shop}/item', [ShopController::class, 'storeItem'])->middleware('auth:sanctum')
+    ->name('shops.store.item');
+Route::put('shops/{shop}/item', [ShopController::class, 'updateItem'])->middleware('auth:sanctum')
+    ->name('shops.update.item');
+Route::get('shops/{shop}/item', [ShopController::class, 'showItem'])->middleware('auth:sanctum')
+    ->name('shops.show.item');
 
 Route::get('images/{image}', [ImageController::class, 'show'])->name('images.show');
 
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('queues/getAllQueuesReserved', [QueueController::class, 'getQueueReserved']);
+    Route::get('queues/getQueueReservedWaiting', [QueueController::class, 'getQueueReservedWaiting']);
     Route::get('queues/getShopStat', [QueueController::class, 'getShopStat']);
+    Route::get('queues/getAllQueuesAllShops', [QueueController::class, 'getAllQueuesAllShops']);
     Route::apiResource('queues', QueueController::class);
 
     Route::prefix('queues/{queue_id}')->group(function () {
@@ -94,11 +99,9 @@ Route::patch('/shops/reminders/{shop_id}', [ReminderController::class, 'markAsDo
 
 
 
-    Route::apiResource('items', ItemController::class);
     Route::apiResource('reminders', ReminderCollection::class);
 });
 
-Route::get('/queues/{queue_id}/subscribe', [QueueSubscriptionController::class, 'subscribe']);
 
 Route::get('redis_key', function () {
     return Redis::keys("*");

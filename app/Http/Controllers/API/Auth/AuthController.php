@@ -96,6 +96,10 @@ class AuthController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
+            $existUser = $this->userRepository->getByEmail($googleUser->getEmail());
+            if ($existUser && ($existUser->role != 'CUSTOMER')) {
+                return redirect()->away(env("CUSTOMER_FRONTEND_URL") . "/login?error=invalid", 201);
+            }
             $user = $this->userRepository->updateOrCreate(
                 [
                     'email' => $googleUser->email
@@ -111,7 +115,7 @@ class AuthController extends Controller
             );
             $token = Crypt::encrypt($user->createToken('token')->plainTextToken);
 
-            return redirect()->away(env("CUSTOMER_FRONTEND_URL") . "/login?token=" . $token . "&id=" . $user->id, 201);
+            return redirect()->away(env("CUSTOMER_FRONTEND_URL") . "/login?token=" . $token . "&id=" . $user->id . "&role=" . $user->role, 201);
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Google login failed'], 500);
@@ -136,15 +140,16 @@ class AuthController extends Controller
         }
 
         if (!hash_equals($token, sha1($user->email)) || $user->email_verified_at) {
-            return view('emails.verifystatus', [
+            return response()->view('emails.verifystatus', [
                 'status' => 'reject',
-                'path_link' => url(env("{$user->role}_FRONTEND_URL") . '/login')]);
+                'path_link' => url(env("{$user->role}_FRONTEND_URL") . '/login')
+            ], 400);
         }
 
         $user->email_verified_at = now();
         $user->save();
 
-        return view('emails.verifystatus', ['status' => 'success', 'path_link' => url(env("{$user->role}_FRONTEND_URL") . '/login')]);
+        return response()->view('emails.verifystatus', ['status' => 'success', 'path_link' => url(env("{$user->role}_FRONTEND_URL") . '/login')], 200);
     }
 
 

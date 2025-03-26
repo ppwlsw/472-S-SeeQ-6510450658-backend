@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\IdResource;
+use App\Http\Resources\QueueAdminCollection;
+use App\Http\Resources\QueueAdminResource;
 use App\Http\Resources\QueueCollection;
 use App\Http\Resources\QueueResource;
 use App\Models\Queue;
@@ -75,12 +78,15 @@ class QueueController extends Controller
 
            if($queuesJson){
                $queues = JsonHelper::parseJsonToCollection($queuesJson);
-               return new QueueCollection($queues);
+               return response()->json(["data" => $queues], 200);
            }
 
            $queues = $this->queueRepository->getAllByShopID($shop_id);
+           if(count($queues) == 0){
+               return response()->json(["message" => "No queues found"], 200);
+           }
            Redis::setex($cacheKey, 10, json_encode($queues));
-           return new QueueCollection($queues);
+           return response()->json(["data" => $queues], 200);
         }
 
         // no query section
@@ -89,12 +95,12 @@ class QueueController extends Controller
 
         if($queuesJson){
             $queues = JsonHelper::parseJsonToCollection($queuesJson);
-            return new QueueCollection($queues);
+            return response()->json(["data" => $queues], 200);
         }
 
         $queues = $this->queueRepository->getAll();
         Redis::setex($cacheKey, 10, json_encode($queues));
-        return new QueueCollection($queues);
+        return response()->json(["data" => $queues], 200);
     }
 
 
@@ -105,11 +111,10 @@ class QueueController extends Controller
     {
         Gate::authorize("create", Queue::class);
         $request->validate([
-            'name' => 'required',
-            'description' => 'required',
-            'is_available' => 'required',
-            'tag' => 'required',
-            'shop_id' => 'required'
+            "name" => "string|required",
+            "description" => "string|required",
+            "is_available" => "boolean|required",
+            "tag" => "string|required",
         ]);
 
         $queue = $this->queueRepository->create([
@@ -131,7 +136,7 @@ class QueueController extends Controller
             ]);
 
         }
-        return new QueueResource($queue);
+        return response()->json(["data" => $queue], 201);
     }
 
     /**
@@ -191,7 +196,9 @@ class QueueController extends Controller
         $cacheKey = "queue_info:$queue->id";
         Redis::del($cacheKey);
         Redis::setex($cacheKey, 30, json_encode($queue->refresh()));
-        return new QueueResource($queue->refresh());
+        return response()->json([
+            "data" => $queue,
+        ],200);
     }
 
     /**
@@ -401,12 +408,29 @@ class QueueController extends Controller
        ], 200);
     }
 
+    public function getAllQueuesAllShops(Request $request)
+    {
+        $queues = $this->userQueueRepository->getAllQueuesAllShops();
+
+        return response()->json([
+            "data" => $queues
+        ]);
+    }
+
     public function getQueueReserved(Request $request)
     {
         $user_id = auth()->id();
         $queues = $this->userQueueRepository->getAllQueueReservedComplete($user_id);
         return response()->json([
            "data" => $queues
+        ]);
+    }
+
+    public function getQueueReservedWaiting(Request $request){
+        $user_id = auth()->id();
+        $queues = $this->userQueueRepository->getAllQueueReservedWaiting($user_id);
+        return response()->json([
+            "data" => $queues
         ]);
     }
 

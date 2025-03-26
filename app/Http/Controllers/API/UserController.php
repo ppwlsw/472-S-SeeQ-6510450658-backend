@@ -7,7 +7,9 @@ use App\Http\Requests\UpdateImageRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\IdResource;
+use App\Http\Resources\ImageUrlResource;
 use App\Http\Resources\ShopResource;
+use App\Http\Resources\UrlResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Repositories\UserRepository;
@@ -44,6 +46,13 @@ class UserController extends Controller
     {
         Gate::authorize('viewAny', User::class);
         $users = $this->userRepository->getAllCustomerWithTrashed();
+
+        if ($users->isEmpty()) {
+            return response()->json([
+                'message' => 'No customer found'
+            ])->setStatusCode(404);
+        }
+
         return UserResource::collection($users);
     }
 
@@ -148,7 +157,9 @@ class UserController extends Controller
                 'image_url' => env("APP_URL") . '/api/images/' . $uri
             ]);
         }
-        return IdResource::make($user);
+        return UrlResource::make((object) [
+            'url' => $user->image_url
+        ]);
     }
 
     public function showShop(User $user)
