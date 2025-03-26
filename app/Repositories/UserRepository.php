@@ -24,12 +24,12 @@ class UserRepository
     }
 
     public function getAllCustomerWithTrashedPaginate() {
-        return $this->model::withTrashed()->where('role', 'CUSTOMER')->orderBy('id')->paginate(6);
+        return $this->model::withTrashed()->where('role', 'CUSTOMER')->orderByDesc('updated_at')->paginate(6);
     }
 
     public function getAllCustomerWithTrashed(): Collection
     {
-        return $this->model::withTrashed()->where('role', 'CUSTOMER')->orderBy('id')->get();
+        return $this->model::withTrashed()->where('role', 'CUSTOMER')->orderByDesc('updated_at')->get();
     }
 
     public function getByIdWithTrashed(string $id)

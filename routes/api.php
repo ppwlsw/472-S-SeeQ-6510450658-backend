@@ -102,7 +102,6 @@ Route::patch('/shops/reminders/{shop_id}', [ReminderController::class, 'markAsDo
     Route::apiResource('reminders', ReminderCollection::class);
 });
 
-Route::get('/queues/{queue_id}/subscribe', [QueueSubscriptionController::class, 'subscribe']);
 
 Route::get('redis_key', function () {
     return Redis::keys("*");

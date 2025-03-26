@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('queues', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->unique();
             $table->string('description')->nullable();
             $table->string('image_url')->nullable();
             $table->integer('queue_counter')->default(0);
