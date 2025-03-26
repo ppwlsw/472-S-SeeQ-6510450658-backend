@@ -244,6 +244,7 @@ class ShopController extends Controller
        }
        return response()->json([
            'data' => [
+               'id' => $item->id,
               'api_url'  => $item->api_url,
            ]
        ]);
