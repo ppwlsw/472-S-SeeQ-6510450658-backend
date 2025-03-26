@@ -271,6 +271,11 @@ class ShopController extends Controller
     public function storeItem(StoreItemRequest $request, Shop $shop)
     {
         Gate::authorize('create', Shop::class);
+        if ($shop->item()) {
+            return response()->json([
+                'error' => "Api already exists"
+            ], 400);
+        }
         $shop->item()->create([
             'api_url' => $request->get('api_url'),
             'api_key' => encrypt($request->get('api_key'))
