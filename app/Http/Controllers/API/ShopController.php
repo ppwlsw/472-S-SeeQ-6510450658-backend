@@ -49,6 +49,12 @@ class ShopController extends Controller
     {
         Gate::authorize('viewAny', Shop::class);
         $shops = $this->shopRepository->getAllShopWithTrashed();
+
+        if ($shops->isEmpty()) {
+            return response()->json([
+                'message' => 'No shop found'
+            ])->setStatusCode(404);
+        }
         return ShopResource::collection($shops);
     }
 
