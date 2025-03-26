@@ -67,6 +67,8 @@ Route::post('shops/{shop}/item', [ShopController::class, 'storeItem'])->middlewa
     ->name('shops.store.item');
 Route::put('shops/{shop}/item', [ShopController::class, 'updateItem'])->middleware('auth:sanctum')
     ->name('shops.update.item');
+Route::get('shops/{shop}/recommend-items', [ShopController::class, 'showShopItems'])->middleware('auth:sanctum')
+    ->name('shops.show.recommend-items');
 Route::get('shops/{shop}/item', [ShopController::class, 'showItem'])->middleware('auth:sanctum')
     ->name('shops.show.item');
 

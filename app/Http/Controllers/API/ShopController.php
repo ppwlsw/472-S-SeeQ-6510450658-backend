@@ -234,12 +234,33 @@ class ShopController extends Controller
         return ShopResource::collection($shops);
     }
 
-    public function showItem(Request $request, Shop $shop)
+    public function showItem(Shop $shop)
+    {
+       $item = $shop->item()->first();
+       if (!$item) {
+           return response()->json([
+               'data' => []
+           ]);
+       }
+       return response()->json([
+           'data' => [
+               'id' => $item->id,
+              'api_url'  => $item->api_url,
+           ]
+       ]);
+    }
+
+    public function showShopItems(Request $request, Shop $shop)
     {
         Gate::authorize('view', $shop);
         $item = $shop->item()->first();
+        if (!$item->api_key) {
+           return response()->json([
+               'data' => []
+           ]);
+        }
         $response = Http::withHeaders([
-            'Api-key' => decrypt($item->api_ke),
+            'Api-key' => decrypt($item->api_key),
             'Name' => 'seeq-ri-api1'
         ])->get($item->api_url);
         if (!$response->successful()) {
@@ -251,6 +272,11 @@ class ShopController extends Controller
     public function storeItem(StoreItemRequest $request, Shop $shop)
     {
         Gate::authorize('create', Shop::class);
+        if ($shop->item()->first()) {
+            return response()->json([
+                'error' => "Api already exists"
+            ], 400);
+        }
         $shop->item()->create([
             'api_url' => $request->get('api_url'),
             'api_key' => encrypt($request->get('api_key'))
@@ -266,7 +292,9 @@ class ShopController extends Controller
             'api_key' => encrypt($request->get('api_key'))
         ]);
         return response([
-            'data' => []
+            'data' => [
+                'id' => $shop->item()->first()->id,
+            ]
         ])->setStatusCode(200);
     }
 
