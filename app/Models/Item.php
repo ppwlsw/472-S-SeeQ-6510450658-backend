@@ -14,7 +14,7 @@ class Item extends Model
     protected $fillable = [
         'shop_id',
         'api_url',
-        'token'
+        'api_key'
     ];
 
     public function shop(): BelongsTo

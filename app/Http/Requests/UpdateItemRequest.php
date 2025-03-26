@@ -15,7 +15,7 @@ class UpdateItemRequest extends FormRequest
     {
         return [
             'api_url' => 'required|string',
-            'api_token' => 'required|string',
+            'api_key' => 'required|string',
         ];
     }
 
@@ -24,8 +24,8 @@ class UpdateItemRequest extends FormRequest
         return [
             'api_url.required' => 'API URL is required.',
             'api_url.string' => 'API URL must be a string.',
-            'api_token.required' => 'API token is required.',
-            'api_token.string' => 'API token must be a string.',
+            'api_key.required' => 'API key is required.',
+            'api_key.string' => 'API key must be a string.',
         ];
     }
 }

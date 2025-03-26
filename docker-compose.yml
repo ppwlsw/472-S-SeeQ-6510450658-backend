@@ -1,5 +1,5 @@
 services:
-    laravel.test:
+    seeq.backend:
         build:
             context: './vendor/laravel/sail/runtimes/8.4'
             dockerfile: Dockerfile
@@ -22,6 +22,7 @@ services:
         networks:
             - sail
             - object-storage
+            - external-api
         depends_on:
             - pgsql
             - redis
@@ -124,6 +125,9 @@ networks:
         driver: bridge
     object-storage:
         driver: bridge
+    external-api:
+        external: true
+        name: pos-stock-backend_external-api
 
 volumes:
     sail-pgsql:

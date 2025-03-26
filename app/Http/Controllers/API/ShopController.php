@@ -23,6 +23,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
@@ -237,7 +238,14 @@ class ShopController extends Controller
     {
         Gate::authorize('view', $shop);
         $item = $shop->item()->first();
-        return ItemResource::make($item)->response()->setStatusCode(200);
+        $response = Http::withHeaders([
+            'Api-key' => decrypt($item->api_ke),
+            'Name' => 'seeq-ri-api1'
+        ])->get($item->api_url);
+        if (!$response->successful()) {
+            return response()->json(['error' => "Api is not found"])->setStatusCode(400);
+        }
+        return $response->json();
     }
 
     public function storeItem(StoreItemRequest $request, Shop $shop)
@@ -245,11 +253,9 @@ class ShopController extends Controller
         Gate::authorize('create', Shop::class);
         $shop->item()->create([
             'api_url' => $request->get('api_url'),
-            'token' => $request->get('api_token')
+            'api_key' => encrypt($request->get('api_key'))
         ]);
-        return response([
-            'data' => []
-        ])->setStatusCode(201);
+        return IdResource::make($shop)->response()->setStatusCode(201);
     }
 
     public function updateItem(UpdateItemRequest $request, Shop $shop)
@@ -257,7 +263,7 @@ class ShopController extends Controller
         Gate::authorize('update', $shop);
         $shop->item()->update([
             'api_url' => $request->get('api_url'),
-            'token' => $request->get('api_token')
+            'api_key' => encrypt($request->get('api_key'))
         ]);
         return response([
             'data' => []
