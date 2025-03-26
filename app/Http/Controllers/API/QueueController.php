@@ -83,7 +83,10 @@ class QueueController extends Controller
 
            $queues = $this->queueRepository->getAllByShopID($shop_id);
            if(count($queues) == 0){
-               return response()->json(["message" => "No queues found"], 200);
+               return response()->json([
+                   "data" => [],
+                   "message" => "No queues found"
+               ], 200);
            }
            Redis::setex($cacheKey, 10, json_encode($queues));
            return response()->json(["data" => $queues], 200);
