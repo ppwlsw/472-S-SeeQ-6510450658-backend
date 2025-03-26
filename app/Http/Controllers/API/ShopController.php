@@ -287,12 +287,10 @@ class ShopController extends Controller
     public function updateItem(UpdateItemRequest $request, Shop $shop)
     {
         Gate::authorize('update', $shop);
-        $shop->item()->updateOrCreate(
-            ['api_url' => $request->get('api_url')], // Unique identifying attributes
-            [
-                'api_key' => encrypt($request->get('api_key'))
-            ]
-        );
+        $shop->item()->update([
+            'api_url' => $request->get('api_url'),
+            'api_key' => encrypt($request->get('api_key'))
+        ]);
         return response([
             'data' => [
                 'id' => $shop->item()->first()->id,
