@@ -23,12 +23,26 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $role =  fake()->randomElement(['USER', 'CUSTOMER', 'SHOP']);
+        $image_url = null;
+        switch ($role) {
+            case 'SHOP':
+                $image_url = env('APP_URL') . '/api/images/shops+defaults+images+avatar.png';
+                break;
+            case 'CUSTOMER':
+                $image_url = env('APP_URL') . '/api/images/customers+defaults+images+avatar.png';
+                break;
+            default:
+                break;
+
+        }
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
             'phone' => fake()->phoneNumber(),
-            'role' => fake()->randomElement(['USER', 'CUSTOMER', 'SHOP']),
+            'image_url' => $image_url,
+            'role' => $role,
             'email_verified_at' => now(),
         ];
     }

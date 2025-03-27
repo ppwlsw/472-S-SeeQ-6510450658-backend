@@ -118,7 +118,7 @@ class QueueController extends Controller
         $request->validate([
             "name" => "string|required",
             "description" => "string|required",
-            "is_available" => "string|required",
+            "is_available" => "boolean|required",
             "tag" => "string|required",
         ]);
 
