@@ -47,7 +47,7 @@ class ShopVerificationEmail extends Mailable
             with: [
                 'shop' => $this->shop,
                 'user' => $this->user,
-                'verificationLink' => url("/api/auth/emails/" . $this->user->id . "/" . sha1($this->user->email) . "/verify"),
+                'verificationLink' => env("EMAIL_CALLBACK_URL") . "/api/auth/emails/" . $this->user->id . "/" . sha1($this->user->email) . "/verify",
             ]
         );
     }

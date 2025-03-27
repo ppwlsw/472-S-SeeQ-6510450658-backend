@@ -113,6 +113,8 @@ class QueueController extends Controller
     public function store(Request $request)
     {
         Gate::authorize("create", Queue::class);
+        $isAvailable =  filter_var($request["is_available"], FILTER_VALIDATE_BOOLEAN);
+        $request["is_available"] = $isAvailable;
         $request->validate([
             "name" => "string|required",
             "description" => "string|required",

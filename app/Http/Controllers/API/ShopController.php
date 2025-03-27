@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateItemRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateShopRequest;
 use App\Http\Resources\ItemResource;
+use App\Http\Resources\SearchShopResource;
 use App\Http\Resources\ShopResource;
 use App\Http\Resources\IdResource;
 use App\Http\Resources\UrlResource;
@@ -35,7 +36,9 @@ class ShopController extends Controller
     public function __construct(
         private ShopRepository $shopRepository,
         private UserRepository $userRepository
-    ) {}
+    )
+    {
+    }
 
     public function index()
     {
@@ -48,6 +51,12 @@ class ShopController extends Controller
     {
         Gate::authorize('viewAny', Shop::class);
         $shops = $this->shopRepository->getAllShopWithTrashed();
+
+        if ($shops->isEmpty()) {
+            return response()->json([
+                'message' => 'No shop found'
+            ])->setStatusCode(404);
+        }
         return ShopResource::collection($shops);
     }
 
@@ -58,6 +67,7 @@ class ShopController extends Controller
 
         return ShopResource::collection($shops);
     }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -92,20 +102,6 @@ class ShopController extends Controller
                 'longitude' => $request->longitude,
             ]);
 
-            if ($request->hasFile('image')) {
-                $file = $request->image;
-                $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
-                $path = 'shops/'. $shop->id .'/images/logos/'. $filename;
-                Storage::disk('s3')->put($path, file_get_contents($file), 'private');
-                $uri = str_replace('/', '+', $path);
-                $shop->update([
-                    'image_url' => env("APP_URL") . '/api/images/' . $uri
-                ]);
-                $user->update([
-                    'image_url' => env("APP_URL") . '/api/images/' . $uri
-                ]);
-            }
-
             Mail::to($user->email)->send(new ShopVerificationEmail($shop, $user));
             return [
                 'user' => $user,
@@ -116,7 +112,6 @@ class ShopController extends Controller
 
         return IdResource::make($shop)->response()->setStatusCode(201);
     }
-
 
 
     /**
@@ -188,7 +183,7 @@ class ShopController extends Controller
         if ($request->hasFile('image')) {
             $file = $request->image;
             $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
-            $path = 'shops/'. $shop->id .'/images/logos/'. $filename;
+            $path = 'shops/' . $shop->id . '/images/logos/' . $filename;
             Storage::disk('s3')->put($path, file_get_contents($file), 'public');
             $uri = str_replace('/', '+', $path);
             $shop->update([
@@ -233,12 +228,33 @@ class ShopController extends Controller
         return ShopResource::collection($shops);
     }
 
-    public function showItem(Request $request, Shop $shop)
+    public function showItem(Shop $shop)
+    {
+        $item = $shop->item()->first();
+        if (!$item) {
+            return response()->json([
+                'data' => []
+            ]);
+        }
+        return response()->json([
+            'data' => [
+                'id' => $item->id,
+                'api_url' => $item->api_url,
+            ]
+        ]);
+    }
+
+    public function showShopItems(Request $request, Shop $shop)
     {
         Gate::authorize('view', $shop);
         $item = $shop->item()->first();
+        if (!$item->api_key) {
+            return response()->json([
+                'data' => []
+            ]);
+        }
         $response = Http::withHeaders([
-            'Api-key' => decrypt($item->api_ke),
+            'Api-key' => decrypt($item->api_key),
             'Name' => 'seeq-ri-api1'
         ])->get($item->api_url);
         if (!$response->successful()) {
@@ -250,6 +266,11 @@ class ShopController extends Controller
     public function storeItem(StoreItemRequest $request, Shop $shop)
     {
         Gate::authorize('create', Shop::class);
+        if ($shop->item()->first()) {
+            return response()->json([
+                'error' => "Api already exists"
+            ], 400);
+        }
         $shop->item()->create([
             'api_url' => $request->get('api_url'),
             'api_key' => encrypt($request->get('api_key'))
@@ -265,8 +286,106 @@ class ShopController extends Controller
             'api_key' => encrypt($request->get('api_key'))
         ]);
         return response([
-            'data' => []
+            'data' => [
+                'id' => $shop->item()->first()->id,
+            ]
         ])->setStatusCode(200);
+    }
+
+    public function searchShops(Request $request)
+    {
+        $request->validate([
+            'key' => 'nullable|string',
+            'page' => 'nullable|integer|min:1',
+        ]);
+
+        $query = Shop::with('queues');
+
+        if ($request->filled('key')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->key . '%')
+                    ->orWhere('description', 'like', '%' . $request->key . '%');
+            });
+        }
+
+        $shops = $query->paginate(5);
+
+        return response()->json([
+            'shops' => SearchShopResource::collection($shops),
+            'pagination' => [
+                'current_page' => $shops->currentPage(),
+                'total_pages' => $shops->lastPage(),
+                'total_items' => $shops->total(),
+                'items_per_page' => $shops->perPage(),
+            ]
+        ]);
+    }
+
+    public function searchShopsWithFilters(Request $request)
+    {
+        $request->merge([
+            'sortByDistance' => filter_var($request->input('sortByDistance'), FILTER_VALIDATE_BOOLEAN),
+            'filterLowQueue' => filter_var($request->input('filterLowQueue'), FILTER_VALIDATE_BOOLEAN),
+            'filterOpenOnly' => filter_var($request->input('filterOpenOnly'), FILTER_VALIDATE_BOOLEAN),
+        ]);
+
+        $request->validate([
+            'key' => 'nullable|string',
+            'page' => 'nullable|integer|min:1',
+            'sortByDistance' => 'nullable|boolean',
+            'filterLowQueue' => 'nullable|boolean',
+            'filterOpenOnly' => 'nullable|boolean',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+        ]);
+
+        $query = Shop::with('queues');
+
+        if ($request->filled('key')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->key . '%')
+                    ->orWhere('description', 'like', '%' . $request->key . '%');
+            });
+        }
+
+        if ($request->boolean('filterOpenOnly')) {
+            $query->where('is_open', true);
+        }
+
+        if ($request->boolean('filterLowQueue')) {
+            $query->whereHas('queues', function ($q) {
+                $q->orderBy('queue_counter', 'asc');
+            });
+        }
+
+        if ($request->filled('latitude') && $request->filled('longitude')) {
+            $latitude = $request->input('latitude');
+            $longitude = $request->input('longitude');
+
+            $query->select('*',
+                DB::raw("(6371 * acos(cos(radians($latitude))
+            * cos(radians(latitude))
+            * cos(radians(longitude) - radians($longitude))
+            + sin(radians($latitude))
+            * sin(radians(latitude)))) AS distance")
+            );
+
+            if ($request->boolean('sortByDistance')) {
+                $query->orderBy('distance', 'asc');
+            }
+        }
+
+        $shops = $query->paginate(5);
+
+        return response()->json([
+            'shops' => SearchShopResource::collection($shops),
+            'pagination' => [
+                'current_page' => $shops->currentPage(),
+                'total_pages' => $shops->lastPage(),
+                'total_items' => $shops->total(),
+                'items_per_page' => $shops->perPage(),
+            ]
+        ]);
     }
 
 }

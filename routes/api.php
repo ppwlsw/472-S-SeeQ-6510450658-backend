@@ -54,6 +54,8 @@ Route::patch('shops/{id}/restore', [ShopController::class, 'restore'])->middlewa
     ->name('shops.restore');
 Route::get('shops/withTrashed', [ShopController::class, 'getAllShopWithTrashed'])->middleware('auth:sanctum')
     ->name('shops.withTrashed');
+Route::get('shops/search', [ShopController::class, 'searchShops'])->middleware('auth:sanctum')->name('shops.search');
+Route::get('shops/search/f', [ShopController::class, 'searchShopsWithFilters'])->middleware('auth:sanctum')->name('shops.search.filters');
 
 Route::get('shops/location/nearby', [ShopController::class, 'showNearbyShops'])->middleware('auth:sanctum');;
 Route::apiResource('shops', ShopController::class)->middleware('auth:sanctum');
@@ -67,6 +69,8 @@ Route::post('shops/{shop}/item', [ShopController::class, 'storeItem'])->middlewa
     ->name('shops.store.item');
 Route::put('shops/{shop}/item', [ShopController::class, 'updateItem'])->middleware('auth:sanctum')
     ->name('shops.update.item');
+Route::get('shops/{shop}/recommend-items', [ShopController::class, 'showShopItems'])->middleware('auth:sanctum')
+    ->name('shops.show.recommend-items');
 Route::get('shops/{shop}/item', [ShopController::class, 'showItem'])->middleware('auth:sanctum')
     ->name('shops.show.item');
 

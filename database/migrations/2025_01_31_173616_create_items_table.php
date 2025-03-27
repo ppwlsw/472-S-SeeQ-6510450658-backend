@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Shop::class);
+            $table->foreignIdFor(Shop::class)->unique();
             $table->string('api_url')->unique();
             $table->string('api_key');
             $table->timestamps();

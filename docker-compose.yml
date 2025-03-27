@@ -24,22 +24,55 @@ services:
             - object-storage
             - external-api
         depends_on:
-            - pgsql
-            - redis
-            - mailpit
-            - minio
-    pgsql:
+            - seeq.pgsql
+            - seeq.redis
+            - seeq.mailpit
+            - seeq.minio
+            - pos.stock.backend
+
+    pos.stock.backend:
+        image: 'suphanat3830/pos-stock-backend'
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        ports:
+            - '81:80'
+            - '5174:5173'
+        environment:
+            LARAVEL_SAIL: 1
+            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
+            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
+            IGNITION_LOCAL_SITES_PATH: '${PWD}'
+            DB_CONNECTION: 'pgsql'
+            DB_HOST: '${POS_STOCK_DB_HOST:-pos.stock.pgsql}'
+            DB_PORT: '${POS_STOCK_DB_PORT:-5432}'
+            DB_DATABASE: '${POS_STOCK_DB_DATABASE:-pos_stock}'
+            DB_USERNAME: '${POS_STOCK_DB_USERNAME:-admin}'
+            DB_PASSWORD: '${POS_STOCK_DB_PASSWORD:-password}'
+            APP_KEY: '${POS_STOCK_API_KEY:-base64:3NGhEIeENIaqSEKItHtgUZfcv2/kBj5+DNSS1RUa3M8=}'
+            APP_URL: 'http://pos.stock.backend'
+            APP_SERVICE: 'pos.stock.backend'
+            APP_TIMEZONE: 'Asia/Bangkok'
+        tty: true
+        stdin_open: true
+        command: sail sh -c "php artisan migrate:fresh --seed --force && php artisan serve --port=80 --host=0.0.0.0"
+
+        networks:
+            - external-api
+            - pos-stock-backend
+        depends_on:
+            - pos.stock.pgsql
+
+    seeq.pgsql:
         image: 'postgres:latest'
         ports:
             - '${FORWARD_DB_PORT:-5432}:5432'
         environment:
-            PGPASSWORD: '${DB_PASSWORD:-secret}'
-            POSTGRES_DB: '${DB_DATABASE}'
-            POSTGRES_USER: '${DB_USERNAME}'
-            POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
+            PGPASSWORD: '${SEEQ_DB_PASSWORD:-password}'
+            POSTGRES_DB: '${SEEQ_DB_DATABASE:-seeq}'
+            POSTGRES_USER: '${SEEQ_DB_USERNAME:-admin}'
+            POSTGRES_PASSWORD: '${SEEQ_DB_PASSWORD:-password}'
         volumes:
-            - 'sail-pgsql:/var/lib/postgresql/data'
-            - './vendor/laravel/sail/database/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql'
+            - 'seeq-pgsql:/var/lib/postgresql/data'
         networks:
             - sail
         healthcheck:
@@ -53,19 +86,45 @@ services:
                 - '${DB_USERNAME}'
             retries: 3
             timeout: 5s
-    minio:
+
+    pos.stock.pgsql:
+        image: 'postgres:latest'
+        ports:
+            - '${POS_STOCK_FORWARD_DB_PORT:-5433}:5432'
+        environment:
+            PGPASSWORD: '${POS_STOCK_DB_PASSWORD:-password}'
+            POSTGRES_DB: '${POS_STOCK_DB_DATABASE:-pos_stock}'
+            POSTGRES_USER: '${POS_STOCK_DB_USERNAME:-admin}'
+            POSTGRES_PASSWORD: '${POS_STOCK_DB_PASSWORD:-password}'
+        volumes:
+            - 'pos-stock-pgsql:/var/lib/postgresql/data'
+        networks:
+            - pos-stock-backend
+        healthcheck:
+            test:
+                - CMD
+                - pg_isready
+                - '-q'
+                - '-d'
+                - '${POS_DB_DATABASE:-pos_stock}'
+                - '-U'
+                - '${POS_DB_USERNAME:-admin}'
+            retries: 3
+            timeout: 5s
+
+    seeq.minio:
         image: 'bitnami/minio:latest'
         ports:
             - '9000:9000'
             - '9001:9001'
         environment:
-            MINIO_ROOT_USER: '${DB_USERNAME}'
-            MINIO_ROOT_PASSWORD: '${DB_PASSWORD:-secret}'
+            MINIO_ROOT_USER: '${DB_USERNAME:-admin}'
+            MINIO_ROOT_PASSWORD: '${DB_PASSWORD:-password}'
         networks:
             - object-storage
         volumes:
             - 'sail-minio:/bitnami/minio/data'
-    redis:
+    seeq.redis:
         image: 'redis:alpine'
         ports:
             - '${FORWARD_REDIS_PORT:-6379}:6379'
@@ -80,7 +139,7 @@ services:
                 - ping
             retries: 3
             timeout: 5s
-    mailpit:
+    seeq.mailpit:
         image: 'axllent/mailpit:latest'
         ports:
             - '${FORWARD_MAILPIT_PORT:-1025}:1025'
@@ -88,13 +147,13 @@ services:
         networks:
             - sail
 
-    subscribe-service:
+    seeq.subscribe-service:
         image: thanawatptd/subscribe-service:latest
         ports:
             - "3001:3001"
         environment:
             - PORT=3001
-            - REDIS_URL=redis://redis:6379
+            - REDIS_URL=redis://seeq.redis:6379
         restart: unless-stopped
         networks:
             - sail
@@ -106,11 +165,16 @@ networks:
         driver: bridge
     external-api:
         driver: bridge
+    pos-stock-backend:
+        driver: bridge
 
 volumes:
-    sail-pgsql:
+    seeq-pgsql:
         driver: local
     sail-redis:
         driver: local
     sail-minio:
         driver: local
+    pos-stock-pgsql:
+        driver: local
+

@@ -41,7 +41,7 @@ class ShopFactory extends Factory
         return [
             'user_id' =>  fake()->unique()->randomElement(User::all()->where('role', 'SHOP')->pluck('id')->toArray()),
             'name' => $faker->company,
-            'image_url' => $faker->imageUrl(640, 480, 'business'),
+            'image_url' => null,
             'phone' => $faker->phoneNumber,
             'address' => $faker->address,
             'description' => $shopDescriptions[$faker->randomElement($shopTypes)],
