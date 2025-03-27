@@ -22,6 +22,7 @@ class UserQueueRepository
                 'queues.tag as queue_tag',
                 'shops.name as shop_name',
                 'shops.description as shop_description',
+                'shops.address as shop_address',
             ])
             ->first();
 

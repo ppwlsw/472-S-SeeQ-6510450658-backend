@@ -81,6 +81,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('queues/getQueueReservedWaiting', [QueueController::class, 'getQueueReservedWaiting']);
     Route::get('queues/getShopStat', [QueueController::class, 'getShopStat']);
     Route::get('queues/getAllQueuesAllShops', [QueueController::class, 'getAllQueuesAllShops']);
+    Route::post('queues/{queue}', [QueueController::class,'update'])->middleware('auth:sanctum');
     Route::apiResource('queues', QueueController::class);
 
     Route::prefix('queues/{queue_id}')->group(function () {

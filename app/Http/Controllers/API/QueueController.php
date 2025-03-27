@@ -12,6 +12,7 @@ use App\Models\Queue;
 use App\Repositories\QueueRepository;
 use App\Repositories\UserQueueRepository;
 use App\Utils\JsonHelper;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redis;
@@ -122,13 +123,17 @@ class QueueController extends Controller
             "tag" => "string|required",
         ]);
 
-        $queue = $this->queueRepository->create([
-            'name' => $request->get('name'),
-            'description' => $request->get('description'),
-            'is_available' => $request->get('is_available'),
-            'tag' => $request->get('tag'),
-            'shop_id' => $request->get('shop_id'),
-       ]);
+        try{
+            $queue = $this->queueRepository->create([
+                'name' => $request->get('name'),
+                'description' => $request->get('description'),
+                'is_available' => $request->get('is_available'),
+                'tag' => $request->get('tag'),
+                'shop_id' => $request->get('shop_id'),
+            ]);
+        }catch ( QueryException $e ){
+            return response()->json(["message" => "This name is already in use"], 500);
+        }
 
         if ($request->hasFile('image')) {
             $file = $request->image;
@@ -171,40 +176,48 @@ class QueueController extends Controller
      */
     public function update(Request $request, Queue $queue)
     {
-       Gate::authorize("update", $queue);
-       $validate = $request->validate([]);
+        if ($request->hasFile('image')) {
+            $file = $request->file('image'); // Get the uploaded file
+            $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
+            $path = 'queues/' . $queue->id . '/images/logos/' . $filename;
 
-        if($request->isMethod("put")){
-            $validate = $request->validate([
-                "name" => "string|required",
-                "description" => "string|required",
-                "is_available" => "boolean|required",
-                "queue_image_url" => "string|required",
-                "tag" => "string|required",
+            // Store the file in S3 with 'private' visibility
+            Storage::disk('s3')->put($path, file_get_contents($file), 'private');
+
+            // Convert path to a URL-safe format
+            $uri = str_replace('/', '+', $path);
+
+            // Merge new data into the request
+            $request->merge([
+                'image_url' => env("APP_URL") . '/api/images/' . $uri
             ]);
         }
 
-        if($request->isMethod("patch")){
-                $validate = $request->validate([
-                "name" => "string|nullable",
-                "description" => "string|nullable",
-                "is_available" => "boolean|nullable",
-                "queue_image_url" => "string|nullable",
-                "tag" => "string|nullable",
-            ]);
-        }
+        // Authorize the action
+        Gate::authorize("update", $queue);
 
-        $this->queueRepository->update(
-            $validate
-        , $queue->id);
+        // Validate request
+        $validate = $request->validate([
+            "name" => "string|nullable",
+            "description" => "string|nullable",
+            "is_available" => "boolean|nullable",
+            "image_url" => "string|nullable",
+            "tag" => "string|nullable",
+        ]);
 
+
+        // Update Queue data
+        $this->queueRepository->update($validate, $queue->id);
+
+        // Clear and refresh cache
         $cacheKey = "queue_info:$queue->id";
         Redis::del($cacheKey);
         Redis::setex($cacheKey, 30, json_encode($queue->refresh()));
         return response()->json([
             "data" => $queue,
-        ],200);
+        ], 200);
     }
+
 
     /**
      * Remove the specified resource from storage.
