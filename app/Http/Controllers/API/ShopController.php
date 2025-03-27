@@ -215,7 +215,6 @@ class ShopController extends Controller
 
         Gate::authorize('view', Shop::class);
 
-
         $request->validate([
                 'latitude' => 'required|numeric',
                 'longitude' => 'required|numeric',

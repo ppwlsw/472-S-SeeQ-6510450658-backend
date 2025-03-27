@@ -46,8 +46,8 @@ class ShopFactory extends Factory
             'address' => $faker->address,
             'description' => $shopDescriptions[$faker->randomElement($shopTypes)],
             'is_open' => $faker->boolean,
-            'latitude' => $faker->latitude(12, 14),
-            'longitude' => $faker->longitude(100, 104),
+            'latitude' => $faker->latitude(13.826, 13.846), // Adjusted range for Ratchayothin - Kasetsart University
+            'longitude' => $faker->longitude(100.566, 100.592), // Adjusted range for Ratchayothin - Kasetsart University
         ];
     }
 }
