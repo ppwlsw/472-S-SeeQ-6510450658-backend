@@ -68,17 +68,18 @@ class ShowQueueTest extends TestCase
         $faker = FakerFactory::create('th_TH');
         $shop = Shop::factory()->create([
             'user_id' => $user->id,
-            'name' => "Shop test",
-            'image_url' => $faker->imageUrl(640, 480, 'business'),
+            'name' => $faker->company,
+            'image_url' => env('APP_URL') . '/api/images/shops+defaults+images+avatar.png',
             'phone' => $faker->phoneNumber,
             'address' => $faker->address,
+            'description' => "Open leaw",
             'is_open' => $faker->boolean,
-            'latitude' => $faker->latitude(12, 14),
-            'longitude' => $faker->longitude(100, 104),
+            'latitude' => $faker->latitude(13.826, 13.846), // Adjusted range for Ratchayothin - Kasetsart University
+            'longitude' => $faker->longitude(100.566, 100.592), // Adjusted range for Ratchayothin - Kasetsart University
         ]);
 
         // สร้าง Queue ที่เกี่ยวข้องกับร้าน
-        $queue1 = Queue::factory()->create([
+        $queue1 = Queue::create([
             'name' => 'Table 1',
             'description' => 'โต๊ะ TEST',
             'is_available' => true,
@@ -86,7 +87,7 @@ class ShowQueueTest extends TestCase
             'shop_id' => $shop->id,
         ]);
 
-        $queue2 = Queue::factory()->create([
+        $queue2 = Queue::create([
             'name' => 'Table 2',
             'description' => 'โต๊ะ TEST',
             'is_available' => true,
