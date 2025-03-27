@@ -92,11 +92,23 @@ class UserQueueRepository
     }
 
     public function updateStatusToCancel(int $user_id, int $queueID, string $queue_number){
-        return DB::table('users_queues')->where('user_id', $user_id)->where('queue_id', $queueID)->where('queue_number', $queue_number)->update(['status' => "canceled"]);
+        return DB::table('users_queues')
+            ->where('user_id', $user_id)
+            ->where('queue_id', $queueID)
+            ->where('queue_number', $queue_number)
+            ->orderBy('created_at', 'desc') // เรียงจากล่าสุดไปเก่าสุด
+            ->limit(1) // จำกัดให้เลือกแค่ 1 record ล่าสุด
+            ->update(['status' => "canceled"]);
     }
 
     public function updateStatusToComplete(int $user_id, int $queueID, string $queue_number){
-        return DB::table('users_queues')->where('user_id', $user_id)->where('queue_id', $queueID)->where('queue_number', $queue_number)->update(['status' => "completed"]);
+        return DB::table('users_queues')
+            ->where('user_id', $user_id)
+            ->where('queue_id', $queueID)
+            ->where('queue_number', $queue_number)
+            ->orderBy('created_at', 'desc') // เรียงจากล่าสุดไปเก่าสุด
+            ->limit(1) // จำกัดให้เลือกแค่ 1 record ล่าสุด
+            ->update(['status' => "completed"]);
     }
 
     public function userWaitingQueue(int $queueID){
