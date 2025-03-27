@@ -117,13 +117,13 @@
             };
         @endphp
 
-        <a href="{{ $resetUrl }}reset-password?token={{ $token }}" class="reset-button">
+        <a href="{{ $resetUrl }}/reset-password?token={{ $token }}" class="reset-button">
             รีเซ็ตรหัสผ่าน
         </a>
 
         <div class="reset-link">
             <strong>หรือคัดลอกลิงก์นี้ไปวางในเบราว์เซอร์ของคุณ:</strong><br>
-            {{ $resetUrl }}reset-password?token={{ $token }}
+            {{ $resetUrl }}/reset-password?token={{ $token }}
         </div>
 
         <div class="footer">

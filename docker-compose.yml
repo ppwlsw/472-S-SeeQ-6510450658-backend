@@ -108,7 +108,7 @@ services:
                 - '-d'
                 - '${POS_DB_DATABASE:-pos_stock}'
                 - '-U'
-                - '${POS_DB_USERNAME:-postgres}'
+                - '${POS_DB_USERNAME:-admin}'
             retries: 3
             timeout: 5s
 

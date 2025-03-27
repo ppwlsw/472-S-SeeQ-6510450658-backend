@@ -36,7 +36,9 @@ class ShopController extends Controller
     public function __construct(
         private ShopRepository $shopRepository,
         private UserRepository $userRepository
-    ) {}
+    )
+    {
+    }
 
     public function index()
     {
@@ -65,6 +67,7 @@ class ShopController extends Controller
 
         return ShopResource::collection($shops);
     }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -99,20 +102,6 @@ class ShopController extends Controller
                 'longitude' => $request->longitude,
             ]);
 
-            if ($request->hasFile('image')) {
-                $file = $request->image;
-                $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
-                $path = 'shops/'. $shop->id .'/images/logos/'. $filename;
-                Storage::disk('s3')->put($path, file_get_contents($file), 'private');
-                $uri = str_replace('/', '+', $path);
-                $shop->update([
-                    'image_url' => env("APP_URL") . '/api/images/' . $uri
-                ]);
-                $user->update([
-                    'image_url' => env("APP_URL") . '/api/images/' . $uri
-                ]);
-            }
-
             Mail::to($user->email)->send(new ShopVerificationEmail($shop, $user));
             return [
                 'user' => $user,
@@ -123,7 +112,6 @@ class ShopController extends Controller
 
         return IdResource::make($shop)->response()->setStatusCode(201);
     }
-
 
 
     /**
@@ -195,7 +183,7 @@ class ShopController extends Controller
         if ($request->hasFile('image')) {
             $file = $request->image;
             $filename = now()->format('Y-m-d_H:i:s.u') . '.png';
-            $path = 'shops/'. $shop->id .'/images/logos/'. $filename;
+            $path = 'shops/' . $shop->id . '/images/logos/' . $filename;
             Storage::disk('s3')->put($path, file_get_contents($file), 'public');
             $uri = str_replace('/', '+', $path);
             $shop->update([
@@ -243,18 +231,18 @@ class ShopController extends Controller
 
     public function showItem(Shop $shop)
     {
-       $item = $shop->item()->first();
-       if (!$item) {
-           return response()->json([
-               'data' => []
-           ]);
-       }
-       return response()->json([
-           'data' => [
-               'id' => $item->id,
-              'api_url'  => $item->api_url,
-           ]
-       ]);
+        $item = $shop->item()->first();
+        if (!$item) {
+            return response()->json([
+                'data' => []
+            ]);
+        }
+        return response()->json([
+            'data' => [
+                'id' => $item->id,
+                'api_url' => $item->api_url,
+            ]
+        ]);
     }
 
     public function showShopItems(Request $request, Shop $shop)
@@ -262,9 +250,9 @@ class ShopController extends Controller
         Gate::authorize('view', $shop);
         $item = $shop->item()->first();
         if (!$item->api_key) {
-           return response()->json([
-               'data' => []
-           ]);
+            return response()->json([
+                'data' => []
+            ]);
         }
         $response = Http::withHeaders([
             'Api-key' => decrypt($item->api_key),
