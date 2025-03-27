@@ -28,6 +28,8 @@ class UserSeeder extends Seeder
                 "password" => Hash::make("password"),
                 "role" => "CUSTOMER",
                 "email_verified_at" => now(),
+                "image_url" =>  env('APP_URL') . '/api/images/customers+defaults+images+avatar.png',
+                "phone" => fake('th')->phoneNumber(),
             ]);
         }
 

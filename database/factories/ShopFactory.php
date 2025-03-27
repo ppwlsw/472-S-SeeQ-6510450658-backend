@@ -41,13 +41,13 @@ class ShopFactory extends Factory
         return [
             'user_id' =>  fake()->unique()->randomElement(User::all()->where('role', 'SHOP')->pluck('id')->toArray()),
             'name' => $faker->company,
-            'image_url' => null,
+            'image_url' => env('APP_URL') . '/api/images/shops+defaults+images+avatar.png',
             'phone' => $faker->phoneNumber,
             'address' => $faker->address,
             'description' => $shopDescriptions[$faker->randomElement($shopTypes)],
             'is_open' => $faker->boolean,
-            'latitude' => $faker->latitude(12, 14),
-            'longitude' => $faker->longitude(100, 104),
+            'latitude' => $faker->latitude(13.4, 13.9),
+            'longitude' => $faker->longitude(100.3, 100.9),
         ];
     }
 }

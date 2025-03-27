@@ -15,10 +15,22 @@ class QueueFactory extends Factory
      *
      * @return array<string, mixed>
      */
+
+    function generateTableLabels($maxNumber = 100, $maxLetter = 'C')
+    {
+        $result = [];
+        foreach (range('A', $maxLetter) as $letter) {
+            foreach (range(1, $maxNumber) as $number) {
+                $result[] = "Table {$letter}({$number})";
+            }
+        }
+        return $result;
+    }
+
     public function definition(): array
     {
         return [
-            'name' => 'Table ' . $this->faker->randomElement(['A', 'B', 'C']) . '(' . $this->faker->numberBetween(1, 100) . ')',
+            'name' => fake()->unique()->randomElement($this->generateTableLabels()),
             'description' => 'โต๊ะ ' . $this->faker->numberBetween(4, 20) . ' คน ' . $this->faker->randomElement(['สอง', 'สี่', 'หก', 'แปด', 'สิบ']) . 'เตา',
             'is_available' => $this->faker->boolean(80), // 80% ที่จะเป็น true
             'tag' => $this->faker->regexify('[A-Z]{1,2}'),

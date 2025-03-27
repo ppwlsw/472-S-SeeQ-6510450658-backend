@@ -89,7 +89,8 @@ class ShopController extends Controller
                 'email' => strtolower($request->email),
                 'password' => Hash::make($request->password),
                 'phone' => $request->phone,
-                'role' => 'SHOP'
+                'role' => 'SHOP',
+                'image_url' => env('APP_URL') . '/api/images/shops+defaults+images+avatar.png',
             ]);
 
 
@@ -100,6 +101,7 @@ class ShopController extends Controller
                 'address' => $request->address,
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
+                'image_url' => env('APP_URL') . '/api/images/shops+defaults+images+avatar.png',
             ]);
 
             Mail::to($user->email)->send(new ShopVerificationEmail($shop, $user));
