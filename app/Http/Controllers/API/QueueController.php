@@ -12,6 +12,7 @@ use App\Models\Queue;
 use App\Repositories\QueueRepository;
 use App\Repositories\UserQueueRepository;
 use App\Utils\JsonHelper;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redis;
@@ -122,13 +123,17 @@ class QueueController extends Controller
             "tag" => "string|required",
         ]);
 
-        $queue = $this->queueRepository->create([
-            'name' => $request->get('name'),
-            'description' => $request->get('description'),
-            'is_available' => $request->get('is_available'),
-            'tag' => $request->get('tag'),
-            'shop_id' => $request->get('shop_id'),
-       ]);
+        try{
+            $queue = $this->queueRepository->create([
+                'name' => $request->get('name'),
+                'description' => $request->get('description'),
+                'is_available' => $request->get('is_available'),
+                'tag' => $request->get('tag'),
+                'shop_id' => $request->get('shop_id'),
+            ]);
+        }catch ( QueryException $e ){
+            return response()->json(["message" => "This name is already in use"], 500);
+        }
 
         if ($request->hasFile('image')) {
             $file = $request->image;
@@ -179,7 +184,7 @@ class QueueController extends Controller
                 "name" => "string|required",
                 "description" => "string|required",
                 "is_available" => "boolean|required",
-                "queue_image_url" => "string|required",
+                "image_url" => "string|required",
                 "tag" => "string|required",
             ]);
         }
@@ -189,7 +194,7 @@ class QueueController extends Controller
                 "name" => "string|nullable",
                 "description" => "string|nullable",
                 "is_available" => "boolean|nullable",
-                "queue_image_url" => "string|nullable",
+                "_image_url" => "string|nullable",
                 "tag" => "string|nullable",
             ]);
         }
