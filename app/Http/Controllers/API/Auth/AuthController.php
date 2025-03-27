@@ -131,8 +131,16 @@ class AuthController extends Controller
         )->response()->setStatusCode(201);
     }
 
-    public function verify(User $user, string $token)
+    public function verify(int $user, string $token)
     {
+        try {
+            $user = $this->userRepository->getById($user);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'User not found'
+            ], 404);
+        }
+
         if (!$user) {
             return response()->json([
                 'error' => 'User not found'
