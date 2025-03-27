@@ -77,6 +77,10 @@ class AuthController extends Controller
                 'role' => 'CUSTOMER',
             ]);
 
+            $user->update([
+                'image_url' => env('APP_URL') . '/api/images/shops+defaults+images+avatar.png',
+            ]);
+
             Mail::to($user->email)->send(new UserVerificationEmail($user));
         });
 
