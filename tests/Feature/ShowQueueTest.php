@@ -162,6 +162,7 @@ class ShowQueueTest extends TestCase
 
         // ตรวจสอบข้อมูล JSON ที่ส่งกลับมา
         $response->assertJson([
+            "data" => [],
             "message"=>  "No queues found",
         ]);
     }

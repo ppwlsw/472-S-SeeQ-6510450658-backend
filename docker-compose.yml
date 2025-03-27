@@ -25,9 +25,9 @@ services:
             - external-api
         depends_on:
             - seeq.pgsql
-            - redis
-            - mailpit
-            - minio
+            - seeq.redis
+            - seeq.mailpit
+            - seeq.minio
             - pos.stock.backend
 
     pos.stock.backend:
@@ -112,7 +112,7 @@ services:
             retries: 3
             timeout: 5s
 
-    minio:
+    seeq.minio:
         image: 'bitnami/minio:latest'
         ports:
             - '9000:9000'
@@ -124,7 +124,7 @@ services:
             - object-storage
         volumes:
             - 'sail-minio:/bitnami/minio/data'
-    redis:
+    seeq.redis:
         image: 'redis:alpine'
         ports:
             - '${FORWARD_REDIS_PORT:-6379}:6379'
@@ -139,7 +139,7 @@ services:
                 - ping
             retries: 3
             timeout: 5s
-    mailpit:
+    seeq.mailpit:
         image: 'axllent/mailpit:latest'
         ports:
             - '${FORWARD_MAILPIT_PORT:-1025}:1025'
@@ -147,13 +147,13 @@ services:
         networks:
             - sail
 
-    subscribe-service:
+    seeq.subscribe-service:
         image: thanawatptd/subscribe-service:latest
         ports:
             - "3001:3001"
         environment:
             - PORT=3001
-            - REDIS_URL=redis://redis:6379
+            - REDIS_URL=redis://seeq.redis:6379
         restart: unless-stopped
         networks:
             - sail
