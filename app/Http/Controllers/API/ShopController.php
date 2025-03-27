@@ -334,4 +334,71 @@ class ShopController extends Controller
         ]);
     }
 
+    public function searchShopsWithFilters(Request $request)
+    {
+        $request->merge([
+            'sortByDistance' => filter_var($request->input('sortByDistance'), FILTER_VALIDATE_BOOLEAN),
+            'filterLowQueue' => filter_var($request->input('filterLowQueue'), FILTER_VALIDATE_BOOLEAN),
+            'filterOpenOnly' => filter_var($request->input('filterOpenOnly'), FILTER_VALIDATE_BOOLEAN),
+        ]);
+
+        $request->validate([
+            'key' => 'nullable|string',
+            'page' => 'nullable|integer|min:1',
+            'sortByDistance' => 'nullable|boolean',
+            'filterLowQueue' => 'nullable|boolean',
+            'filterOpenOnly' => 'nullable|boolean',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+        ]);
+
+        $query = Shop::with('queues');
+
+        if ($request->filled('key')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->key . '%')
+                    ->orWhere('description', 'like', '%' . $request->key . '%');
+            });
+        }
+
+        if ($request->boolean('filterOpenOnly')) {
+            $query->where('is_open', true);
+        }
+
+        if ($request->boolean('filterLowQueue')) {
+            $query->whereHas('queues', function ($q) {
+                $q->orderBy('queue_counter', 'asc');
+            });
+        }
+
+        if ($request->filled('latitude') && $request->filled('longitude')) {
+            $latitude = $request->input('latitude');
+            $longitude = $request->input('longitude');
+
+            $query->select('*',
+                DB::raw("(6371 * acos(cos(radians($latitude))
+            * cos(radians(latitude))
+            * cos(radians(longitude) - radians($longitude))
+            + sin(radians($latitude))
+            * sin(radians(latitude)))) AS distance")
+            );
+
+            if ($request->boolean('sortByDistance')) {
+                $query->orderBy('distance', 'asc');
+            }
+        }
+
+        $shops = $query->paginate(5);
+
+        return response()->json([
+            'shops' => SearchShopResource::collection($shops),
+            'pagination' => [
+                'current_page' => $shops->currentPage(),
+                'total_pages' => $shops->lastPage(),
+                'total_items' => $shops->total(),
+                'items_per_page' => $shops->perPage(),
+            ]
+        ]);
+    }
+
 }
