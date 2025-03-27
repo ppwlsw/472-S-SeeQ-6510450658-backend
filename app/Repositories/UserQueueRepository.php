@@ -122,6 +122,7 @@ class UserQueueRepository
                 'users.name as user_name',
                 'users.id as user_id',
                 'users.phone as user_phone',
+                'users_queues.status as status'
             ])
             ->get();
         return $queues;

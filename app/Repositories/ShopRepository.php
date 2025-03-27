@@ -52,20 +52,21 @@ class ShopRepository
         return $this->model::withTrashed()->findOrFail($id);
     }
 
-    public function getNearbyShops($latitude, $longitude){
+    public function getNearbyShops($latitude, $longitude)
+    {
         $threshold = 2; // 2 km threshold
 
-        $nearby_shops = DB::table(DB::raw("(SELECT *,
-        (6371 * acos(
+        return Shop::select('*',
+            DB::raw("(6371 * acos(
             cos(radians($latitude)) * cos(radians(latitude))
             * cos(radians(longitude) - radians($longitude))
             + sin(radians($latitude)) * sin(radians(latitude))
-        )) AS distance FROM shops) as subquery"))
-            ->where("distance", "<=", $threshold)
-            ->orderBy("distance")
+        )) AS distance"))
+            ->whereRaw("(6371 * acos(
+            cos(radians($latitude)) * cos(radians(latitude))
+            * cos(radians(longitude) - radians($longitude))
+            + sin(radians($latitude)) * sin(radians(latitude))
+        )) <= $threshold")
+            ->orderBy('distance')
             ->get();
-
-        return $nearby_shops;
-    }
-
-}
+    }}
