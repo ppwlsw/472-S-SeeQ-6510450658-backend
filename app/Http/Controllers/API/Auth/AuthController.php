@@ -87,43 +87,29 @@ class AuthController extends Controller
         return response()->json(null, 201);
     }
 
-    public function redirectToGoogle(Request $request)
+    public function googleLogin(Request $request)
     {
-        return RedirectResource::make((object)
+        $user = $this->userRepository->updateOrCreate(
+            [
+                'email' => $request->email
+            ],
+            [
+                'name' => $request->name,
+                'password' => '',
+                'image_url' => $request->image_url,
+                'login_by' => 'google',
+                'role' => 'CUSTOMER',
+                'email_verified_at' => now(),
+            ]
+        );
+        $token = Crypt::encrypt($user->createToken('token')->plainTextToken);
+        return LoginResource::make((object)
         [
-            'url' => Socialite::driver('google')->stateless()->redirect()->getTargetUrl()
+            'token' => $token,
+            'id' => $user->id,
+            'role' => $user->role,
         ]
-        )->response()->setStatusCode(200);
-    }
-
-    public function handleGoogleCallback()
-    {
-        try {
-            $googleUser = Socialite::driver('google')->stateless()->user();
-            $existUser = $this->userRepository->getByEmail($googleUser->getEmail());
-            if ($existUser && ($existUser->role != 'CUSTOMER')) {
-                return redirect()->away(env("CUSTOMER_FRONTEND_URL") . "/login?error=invalid", 201);
-            }
-            $user = $this->userRepository->updateOrCreate(
-                [
-                    'email' => $googleUser->email
-                ],
-                [
-                    'name' => $googleUser->name,
-                    'password' => '',
-                    'image_url' => $googleUser->avatar,
-                    'login_by' => 'google',
-                    'role' => 'CUSTOMER',
-                    'email_verified_at' => now(),
-                ]
-            );
-            $token = Crypt::encrypt($user->createToken('token')->plainTextToken);
-
-            return redirect()->away(env("CUSTOMER_FRONTEND_URL") . "/login?token=" . $token . "&id=" . $user->id . "&role=" . $user->role, 201);
-
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Google login failed'], 500);
-        }
+        )->response()->setStatusCode(201);
     }
 
     public function decrypt(Request $request)

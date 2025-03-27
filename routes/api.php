@@ -24,8 +24,7 @@ Route::middleware('throttle:api')->group(function () {
 
 Route::post('auth/login', [AuthController::class, 'login'])->name('auth.login');
 Route::post('auth/register', [AuthController::class, 'register'])->name('auth.register');
-Route::get('auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
-Route::get('auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+Route::post('auth/google/login', [AuthController::class, 'googleLogin'])->name('auth.google.login');
 Route::post('auth/decrypt', [AuthController::class, 'decrypt'])->name('auth.decrypt');
 Route::get('auth/emails/{user}/{token}/verify', [AuthController::class, 'verify'])->name('auth.emails.verify');
 Route::post('auth/reset-password', [AuthController::class, 'resetPassword'])->name('auth.reset-password');
