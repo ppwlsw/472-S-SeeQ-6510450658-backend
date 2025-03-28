@@ -21,7 +21,7 @@ class ShopRepository
     }
 
     public function filter(array $array) {
-        $query = $this->model::query()->withTrashed();
+        $query = $this->model::query()->withTrashed()->orderByDesc('updated_at');
 
         if (isset($array['name'])) {
             $query->where('name', 'LIKE', "%$array[name]%");

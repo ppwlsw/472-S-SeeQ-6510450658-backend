@@ -21,15 +21,16 @@ class UserSeeder extends Seeder
             "role" => "ADMIN",
             "email_verified_at" => now(),
         ]);
-        for($x = 1; $x <= 5; $x++){
+
+        for ($i = 0; $i < 5; $i++) {
             User::create([
-                "name" => "user$x",
-                "email" => "user$x@user.com",
+                "name" => "user" . $i + 1,
+                "email" => "user" . $i + 1 . "@gmail.com",
                 "password" => Hash::make("password"),
                 "role" => "CUSTOMER",
                 "email_verified_at" => now(),
-                "image_url" =>  env('APP_URL') . '/api/images/customers+defaults+images+avatar.png',
-                "phone" => fake('th')->phoneNumber(),
+                "image_url" => env('APP_URL') . '/api/images/shops/defaults/avatar.png',
+                "phone" => fake()->phoneNumber(),
             ]);
         }
 
