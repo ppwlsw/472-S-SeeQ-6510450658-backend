@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
-class AApiCallingTest extends TestCase
+class ApiCallingTest extends TestCase
 {
     /**
      * A basic feature test example.
