@@ -57,7 +57,7 @@ class AccountsTest extends TestCase
         $response = $this->postJson('/api/auth/reset-password', $resetPasswordData);
         $response->assertStatus(400);
     }
-//
+
     public function test_user_can_change_password()
     {
         if (!isset($this->user)) {
@@ -97,131 +97,131 @@ class AccountsTest extends TestCase
 
         $this->assertNull(DB::table('password_resets')->where('email', $this->user->email)->first());
     }
-//
-//    public function test_authorized_user_can_update_profile()
-//    {
-//        $loginResponse = $this->postJson('/api/auth/login', [
-//            'email' => $this->user->email,
-//            'password' => 'password'
-//        ]);
-//
-//        $loginResponse->assertStatus(201);
-//        $token = $loginResponse->json('data.token');
-//
-//        // Decrypt token if needed
-//        $decryptResponse = $this->postJson('/api/auth/decrypt', [
-//            'encrypted' => $token
-//        ]);
-//
-//        $decryptResponse->assertStatus(201);
+
+    public function test_authorized_user_can_update_profile()
+    {
+        $loginResponse = $this->postJson('/api/auth/login', [
+            'email' => $this->user->email,
+            'password' => 'password'
+        ]);
+
+        $loginResponse->assertStatus(201);
+        $token = $loginResponse->json('data.token');
+
+        // Decrypt token if needed
+        $decryptResponse = $this->postJson('/api/auth/decrypt', [
+            'encrypted' => $token
+        ]);
+
+        $decryptResponse->assertStatus(201);
+        $decryptedToken = $decryptResponse->json('data.plain_text');
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $decryptedToken,
+        ])->putJson("/api/users/{$this->user->id}", [
+            'name' => 'Updated Name',
+            'phone' => '9876543210'
+        ]);
+
+        $response->assertStatus(200);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $this->user->id,
+            'name' => 'Updated Name',
+            'phone' => '9876543210'
+        ]);
+    }
+
+    public function test_unauthorized_user_cannot_update_another_users_profile()
+    {
+        // Create another user
+        $anotherUser = User::factory()->create([
+            'name' => "user2",
+            'email' => "usertest2@gmail.com",
+            'password' => Hash::make('password'),
+            'phone' => "0888888888",
+            'role' => 'CUSTOMER',
+            'email_verified_at' => now(),
+        ]);
+
+        // Login as the main user
+        $loginResponse = $this->postJson('/api/auth/login', [
+            'email' => $this->user->email,
+            'password' => 'password'
+        ]);
+
+        $loginResponse->assertStatus(201);
+        $token = $loginResponse->json('data.token');
+
+        // Decrypt token
+        $decryptResponse = $this->postJson('/api/auth/decrypt', [
+            'encrypted' => $token
+        ]);
+
+        $decryptResponse->assertStatus(201);
+        $decryptedToken = $decryptResponse->json('data.plain_text');
+
+        // Try to update another user's profile
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $decryptedToken,
+        ])->putJson("/api/users/{$anotherUser->id}", [
+            'name' => 'Hacked Name',
+            'phone' => '1112223333'
+        ]);
+
+        // Should get 403 Forbidden
+        $response->assertStatus(403);
+
+        // Verify the other user's data was not changed
+        $this->assertDatabaseMissing('users', [
+            'id' => $anotherUser->id,
+            'name' => 'Hacked Name',
+            'phone' => '1112223333'
+        ]);
+    }
+
+    public function test_authenticated_user_can_view_profile()
+    {
+        $loginResponse = $this->postJson('/api/auth/login', [
+            'email' => $this->user->email,
+            'password' => 'password'
+        ]);
+
+        $loginResponse->assertStatus(201);
+        $token = $loginResponse->json('data.token');
+
+        $decryptResponse = $this->postJson('/api/auth/decrypt', [
+            'encrypted' => $token
+        ]);
+
+        $decryptResponse->assertStatus(201);
+        $decryptedToken = $decryptResponse->json('data.plain_text');
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $decryptedToken,
+        ])->getJson("/api/users/{$this->user->id}");
+
+        $response->assertStatus(200);
+    }
+
+    public function test_authorized_user_can_update_avatar()
+    {
+        $loginResponse = $this->postJson('/api/auth/login', [
+            'email' => $this->user->email,
+            'password' => 'password'
+        ]);
+
+        $loginResponse->assertStatus(201);
+        $token = $loginResponse->json('data.token');
+
+        // Decrypt token
+        $decryptResponse = $this->postJson('/api/auth/decrypt', [
+            'encrypted' => $token
+        ]);
+
+        $decryptResponse->assertStatus(201);
 //        $decryptedToken = $decryptResponse->json('data.plain_text');
-//
-//        $response = $this->withHeaders([
-//            'Authorization' => 'Bearer ' . $decryptedToken,
-//        ])->putJson("/api/users/{$this->user->id}", [
-//            'name' => 'Updated Name',
-//            'phone' => '9876543210'
-//        ]);
-//
-//        $response->assertStatus(200);
-//
-//        $this->assertDatabaseHas('users', [
-//            'id' => $this->user->id,
-//            'name' => 'Updated Name',
-//            'phone' => '9876543210'
-//        ]);
-//    }
-//
-//    public function test_unauthorized_user_cannot_update_another_users_profile()
-//    {
-//        // Create another user
-//        $anotherUser = User::factory()->create([
-//            'name' => "user2",
-//            'email' => "usertest2@gmail.com",
-//            'password' => Hash::make('password'),
-//            'phone' => "0888888888",
-//            'role' => 'CUSTOMER',
-//            'email_verified_at' => now(),
-//        ]);
-//
-//        // Login as the main user
-//        $loginResponse = $this->postJson('/api/auth/login', [
-//            'email' => $this->user->email,
-//            'password' => 'password'
-//        ]);
-//
-//        $loginResponse->assertStatus(201);
-//        $token = $loginResponse->json('data.token');
-//
-//        // Decrypt token
-//        $decryptResponse = $this->postJson('/api/auth/decrypt', [
-//            'encrypted' => $token
-//        ]);
-//
-//        $decryptResponse->assertStatus(201);
-//        $decryptedToken = $decryptResponse->json('data.plain_text');
-//
-//        // Try to update another user's profile
-//        $response = $this->withHeaders([
-//            'Authorization' => 'Bearer ' . $decryptedToken,
-//        ])->putJson("/api/users/{$anotherUser->id}", [
-//            'name' => 'Hacked Name',
-//            'phone' => '1112223333'
-//        ]);
-//
-//        // Should get 403 Forbidden
-//        $response->assertStatus(403);
-//
-//        // Verify the other user's data was not changed
-//        $this->assertDatabaseMissing('users', [
-//            'id' => $anotherUser->id,
-//            'name' => 'Hacked Name',
-//            'phone' => '1112223333'
-//        ]);
-//    }
-//
-//    public function test_authenticated_user_can_view_profile()
-//    {
-//        $loginResponse = $this->postJson('/api/auth/login', [
-//            'email' => $this->user->email,
-//            'password' => 'password'
-//        ]);
-//
-//        $loginResponse->assertStatus(201);
-//        $token = $loginResponse->json('data.token');
-//
-//        $decryptResponse = $this->postJson('/api/auth/decrypt', [
-//            'encrypted' => $token
-//        ]);
-//
-//        $decryptResponse->assertStatus(201);
-//        $decryptedToken = $decryptResponse->json('data.plain_text');
-//
-//        $response = $this->withHeaders([
-//            'Authorization' => 'Bearer ' . $decryptedToken,
-//        ])->getJson("/api/users/{$this->user->id}");
-//
-//        $response->assertStatus(200);
-//    }
-//
-//    public function test_authorized_user_can_update_avatar()
-//    {
-//        $loginResponse = $this->postJson('/api/auth/login', [
-//            'email' => $this->user->email,
-//            'password' => 'password'
-//        ]);
-//
-//        $loginResponse->assertStatus(201);
-//        $token = $loginResponse->json('data.token');
-//
-//        // Decrypt token
-//        $decryptResponse = $this->postJson('/api/auth/decrypt', [
-//            'encrypted' => $token
-//        ]);
-//
-//        $decryptResponse->assertStatus(201);
-//        $decryptedToken = $decryptResponse->json('data.plain_text');
-//
+
 //        $image = UploadedFile::fake()->image('avatar.jpg');
 //
 //        $response = $this->withHeaders([
@@ -238,32 +238,32 @@ class AccountsTest extends TestCase
 //        $this->assertStringContainsString("customers/{$this->user->id}/images/avatars/", str_replace('+', '/', parse_url($avatarUrl, PHP_URL_PATH)));
 //        $this->user->refresh();
 //        $this->assertEquals($avatarUrl, $this->user->image_url);
-//    }
-//
-//    public function test_unauthorized_user_cannot_update_another_users_avatar()
-//    {
-//        $anotherUser = User::factory()->create([
-//            'name' => "user2",
-//            'email' => "usertest2@gmail.com",
-//            'password' => Hash::make('password'),
-//            'phone' => "0888888888",
-//            'role' => 'CUSTOMER',
-//            'email_verified_at' => now(),
-//        ]);
-//
-//        $loginResponse = $this->postJson('/api/auth/login', [
-//            'email' => $this->user->email,
-//            'password' => 'password'
-//        ]);
-//
-//        $loginResponse->assertStatus(201);
-//        $token = $loginResponse->json('data.token');
-//
-//        $decryptResponse = $this->postJson('/api/auth/decrypt', [
-//            'encrypted' => $token
-//        ]);
-//
-//        $decryptResponse->assertStatus(201);
+    }
+
+    public function test_unauthorized_user_cannot_update_another_users_avatar()
+    {
+        $anotherUser = User::factory()->create([
+            'name' => "user2",
+            'email' => "usertest2@gmail.com",
+            'password' => Hash::make('password'),
+            'phone' => "0888888888",
+            'role' => 'CUSTOMER',
+            'email_verified_at' => now(),
+        ]);
+
+        $loginResponse = $this->postJson('/api/auth/login', [
+            'email' => $this->user->email,
+            'password' => 'password'
+        ]);
+
+        $loginResponse->assertStatus(201);
+        $token = $loginResponse->json('data.token');
+
+        $decryptResponse = $this->postJson('/api/auth/decrypt', [
+            'encrypted' => $token
+        ]);
+
+        $decryptResponse->assertStatus(201);
 //        $decryptedToken = $decryptResponse->json('data.plain_text');
 //
 //        $image = UploadedFile::fake()->image('avatar.jpg');
@@ -277,23 +277,23 @@ class AccountsTest extends TestCase
 //        $response->assertStatus(403);
 //
 //        $anotherUser->refresh();
-//    }
-//
-//    public function test_can_retrieve_user_avatar_image()
-//    {
-//        $loginResponse = $this->postJson('/api/auth/login', [
-//            'email' => $this->user->email,
-//            'password' => 'password'
-//        ]);
-//
-//        $loginResponse->assertStatus(201);
-//        $token = $loginResponse->json('data.token');
-//
-//        $decryptResponse = $this->postJson('/api/auth/decrypt', [
-//            'encrypted' => $token
-//        ]);
-//
-//        $decryptResponse->assertStatus(201);
+    }
+
+    public function test_can_retrieve_user_avatar_image()
+    {
+        $loginResponse = $this->postJson('/api/auth/login', [
+            'email' => $this->user->email,
+            'password' => 'password'
+        ]);
+
+        $loginResponse->assertStatus(201);
+        $token = $loginResponse->json('data.token');
+
+        $decryptResponse = $this->postJson('/api/auth/decrypt', [
+            'encrypted' => $token
+        ]);
+
+        $decryptResponse->assertStatus(201);
 //        $decryptedToken = $decryptResponse->json('data.plain_text');
 //
 //        $image = UploadedFile::fake()->image('avatar.jpg');
@@ -312,5 +312,5 @@ class AccountsTest extends TestCase
 //
 //        $response->assertStatus(200)
 //            ->assertHeader('Content-Type', 'image/png');
-//    }
+    }
 }
