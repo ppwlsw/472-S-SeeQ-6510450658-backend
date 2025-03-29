@@ -31,25 +31,18 @@ class AccountsTest extends TestCase
         ]);
     }
 
-    public function test_example()
+    public function test_user_can_send_forgot_password_request()
     {
-        $response = $this->get('/');
+        $response = $this->postJson('/api/auth/forget-password', ['email' => $this->user->email]);
 
         $response->assertStatus(200);
-    }
 
-//    public function test_user_can_send_forgot_password_request()
-//    {
-//        $response = $this->postJson('/api/auth/forget-password', ['email' => $this->user->email]);
-//
-//        $response->assertStatus(200);
-//
-//        $passwordResetEntry = DB::table('password_resets')->where('email', $this->user->email)->first();
-//
-//        $this->assertNotNull($passwordResetEntry);
-//        $this->assertNotNull($passwordResetEntry->token);
-//        $this->passwordResetToken = $passwordResetEntry->token;
-//    }
+        $passwordResetEntry = DB::table('password_resets')->where('email', $this->user->email)->first();
+
+        $this->assertNotNull($passwordResetEntry);
+        $this->assertNotNull($passwordResetEntry->token);
+        $this->passwordResetToken = $passwordResetEntry->token;
+    }
 //
 //    public function test_invalid_token_request()
 //    {
