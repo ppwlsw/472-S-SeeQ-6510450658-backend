@@ -44,59 +44,59 @@ class AccountsTest extends TestCase
         $this->passwordResetToken = $passwordResetEntry->token;
     }
 //
-//    public function test_invalid_token_request()
-//    {
-//        $newPassword = 'NewPassword123-';
+    public function test_invalid_token_request()
+    {
+        $newPassword = 'NewPassword123-';
+
+        $resetPasswordData = [
+            'token' => 'WrongTokenForSure',
+            'email' => $this->user->email,
+            'password' => $newPassword
+        ];
+
+        $response = $this->postJson('/api/auth/reset-password', $resetPasswordData);
+        $response->assertStatus(400);
+    }
 //
-//        $resetPasswordData = [
-//            'token' => 'WrongTokenForSure',
-//            'email' => $this->user->email,
-//            'password' => $newPassword
-//        ];
-//
-//        $response = $this->postJson('/api/auth/reset-password', $resetPasswordData);
-//        $response->assertStatus(400);
-//    }
-//
-//    public function test_user_can_change_password()
-//    {
-//        if (!isset($this->user)) {
-//            $this->user = User::factory()->create();
-//        }
-//
-//        $plainToken = Str::random(32);
-//        $hashedToken = Hash::make($plainToken);
-//
-//        DB::table('password_resets')->where('email', $this->user->email)->delete();
-//
-//        DB::table('password_resets')->insert([
-//            'email' => $this->user->email,
-//            'token' => $hashedToken,
-//            'created_at' => now(),
-//            'expires_at' => now()->addMinutes(30)
-//        ]);
-//
-//        $newPassword = 'NewPassword123-';
-//
-//        $resetPasswordData = [
-//            'token' => $plainToken,
-//            'email' => $this->user->email,
-//            'password' => $newPassword
-//        ];
-//
-//        $response = $this->postJson('/api/auth/reset-password', $resetPasswordData);
-//        $response->assertStatus(200);
-//
-//        $loginData = [
-//            'email' => $this->user->email,
-//            'password' => $newPassword
-//        ];
-//
-//        $response = $this->postJson('/api/auth/login', $loginData);
-//        $response->assertStatus(201);
-//
-//        $this->assertNull(DB::table('password_resets')->where('email', $this->user->email)->first());
-//    }
+    public function test_user_can_change_password()
+    {
+        if (!isset($this->user)) {
+            $this->user = User::factory()->create();
+        }
+
+        $plainToken = Str::random(32);
+        $hashedToken = Hash::make($plainToken);
+
+        DB::table('password_resets')->where('email', $this->user->email)->delete();
+
+        DB::table('password_resets')->insert([
+            'email' => $this->user->email,
+            'token' => $hashedToken,
+            'created_at' => now(),
+            'expires_at' => now()->addMinutes(30)
+        ]);
+
+        $newPassword = 'NewPassword123-';
+
+        $resetPasswordData = [
+            'token' => $plainToken,
+            'email' => $this->user->email,
+            'password' => $newPassword
+        ];
+
+        $response = $this->postJson('/api/auth/reset-password', $resetPasswordData);
+        $response->assertStatus(200);
+
+        $loginData = [
+            'email' => $this->user->email,
+            'password' => $newPassword
+        ];
+
+        $response = $this->postJson('/api/auth/login', $loginData);
+        $response->assertStatus(201);
+
+        $this->assertNull(DB::table('password_resets')->where('email', $this->user->email)->first());
+    }
 //
 //    public function test_authorized_user_can_update_profile()
 //    {
