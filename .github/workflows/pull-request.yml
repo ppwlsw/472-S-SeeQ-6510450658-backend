@@ -2,7 +2,7 @@ name: Laravel CI
 
 on:
   push:
-    branches: [ main, develop, 'feature/login-testing', 'feature/user-management-testing', 'feature/reminders-testing', 'feature/queue-type-testing'  ]
+    branches: [ main, develop, 'feature/login-testing', 'feature/user-management-testing', 'feature/reminders-testing', 'feature/queue-type-testing', 'feature/accounts-testing' ]
   pull_request:
     branches: [ main, develop]
 
