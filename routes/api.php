@@ -99,7 +99,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::get('/shops/reminders/{shop_id}', [ReminderController::class, 'show'])->name('reminders.show');
 Route::post('/shops/reminders', [ReminderController::class, 'store'])->name('reminders.store');
-Route::patch('/shops/reminders/{shop_id}', [ReminderController::class, 'markAsDone'])->name('reminders.update');
+Route::patch('/shops/reminders/{reminder_id}', [ReminderController::class, 'markAsDone'])->name('reminders.update');
 
 
 

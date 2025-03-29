@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Repositories\ReminderRepository;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class ReminderController extends Controller
 {
@@ -47,12 +48,19 @@ class ReminderController extends Controller
         }
     }
     public function markAsDone($id){
-        $shopId = (int)$id;
-        if (!$shopId) {
-            return response()->json(['error' => 'shop_id is required'], 400);
+        if (!is_numeric($id) || (int)$id <= 0) {
+            return response()->json(['error' => 'Invalid reminder ID'], Response::HTTP_BAD_REQUEST);
         }
-        return $this->reminderRepository->markAsDone($shopId);
+
+        $updated = $this->reminderRepository->markAsDone((int)$id);
+
+        if (!$updated) {
+            return response()->json(['error' => 'Reminder not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json(['message' => 'Reminder marked as completed'], Response::HTTP_OK);
     }
+
 
 
 
