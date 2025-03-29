@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -206,6 +207,7 @@ class AccountsTest extends TestCase
 
     public function test_authorized_user_can_update_avatar()
     {
+        Storage::fake('s3');
         $loginResponse = $this->postJson('/api/auth/login', [
             'email' => $this->user->email,
             'password' => 'password'
@@ -220,28 +222,29 @@ class AccountsTest extends TestCase
         ]);
 
         $decryptResponse->assertStatus(201);
-//        $decryptedToken = $decryptResponse->json('data.plain_text');
+        $decryptedToken = $decryptResponse->json('data.plain_text');
 
-//        $image = UploadedFile::fake()->image('avatar.jpg');
-//
-//        $response = $this->withHeaders([
-//            'Authorization' => 'Bearer ' . $decryptedToken,
-//        ])->postJson("/api/users/{$this->user->id}/avatar", [
-//            'image' => $image
-//        ]);
-//
-//        $response->assertStatus(200)
-//            ->assertJsonStructure(['data' => ['url']]);
-//
-//        $avatarUrl = $response->json('data.url');
-//
-//        $this->assertStringContainsString("customers/{$this->user->id}/images/avatars/", str_replace('+', '/', parse_url($avatarUrl, PHP_URL_PATH)));
-//        $this->user->refresh();
-//        $this->assertEquals($avatarUrl, $this->user->image_url);
+        $image = UploadedFile::fake()->image('avatar.jpg');
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $decryptedToken,
+        ])->postJson("/api/users/{$this->user->id}/avatar", [
+            'image' => $image
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonStructure(['data' => ['url']]);
+
+        $avatarUrl = $response->json('data.url');
+
+        $this->assertStringContainsString("customers/{$this->user->id}/images/avatars/", str_replace('+', '/', parse_url($avatarUrl, PHP_URL_PATH)));
+        $this->user->refresh();
+        $this->assertEquals($avatarUrl, $this->user->image_url);
     }
 
     public function test_unauthorized_user_cannot_update_another_users_avatar()
     {
+        Storage::fake('s3');
         $anotherUser = User::factory()->create([
             'name' => "user2",
             'email' => "usertest2@gmail.com",
@@ -264,23 +267,24 @@ class AccountsTest extends TestCase
         ]);
 
         $decryptResponse->assertStatus(201);
-//        $decryptedToken = $decryptResponse->json('data.plain_text');
-//
-//        $image = UploadedFile::fake()->image('avatar.jpg');
-//
-//        $response = $this->withHeaders([
-//            'Authorization' => 'Bearer ' . $decryptedToken,
-//        ])->postJson("/api/users/{$anotherUser->id}/avatar", [
-//            'image' => $image
-//        ]);
-//
-//        $response->assertStatus(403);
-//
-//        $anotherUser->refresh();
+        $decryptedToken = $decryptResponse->json('data.plain_text');
+
+        $image = UploadedFile::fake()->image('avatar.jpg');
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $decryptedToken,
+        ])->postJson("/api/users/{$anotherUser->id}/avatar", [
+            'image' => $image
+        ]);
+
+        $response->assertStatus(403);
+
+        $anotherUser->refresh();
     }
 
     public function test_can_retrieve_user_avatar_image()
     {
+        Storage::fake('s3');
         $loginResponse = $this->postJson('/api/auth/login', [
             'email' => $this->user->email,
             'password' => 'password'
@@ -294,23 +298,23 @@ class AccountsTest extends TestCase
         ]);
 
         $decryptResponse->assertStatus(201);
-//        $decryptedToken = $decryptResponse->json('data.plain_text');
-//
-//        $image = UploadedFile::fake()->image('avatar.jpg');
-//
-//        $uploadResponse = $this->withHeaders([
-//            'Authorization' => 'Bearer ' . $decryptedToken,
-//        ])->postJson("/api/users/{$this->user->id}/avatar", [
-//            'image' => $image
-//        ]);
-//
-//        $avatarUrl = $uploadResponse->json('data.url');
-//
-//        $imagePathWithPlus = str_replace(env("APP_URL") . '/api/images/', '', $avatarUrl);
-//
-//        $response = $this->get("/api/images/{$imagePathWithPlus}");
-//
-//        $response->assertStatus(200)
-//            ->assertHeader('Content-Type', 'image/png');
+        $decryptedToken = $decryptResponse->json('data.plain_text');
+
+        $image = UploadedFile::fake()->image('avatar.jpg');
+
+        $uploadResponse = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $decryptedToken,
+        ])->postJson("/api/users/{$this->user->id}/avatar", [
+            'image' => $image
+        ]);
+
+        $avatarUrl = $uploadResponse->json('data.url');
+
+        $imagePathWithPlus = str_replace(env("APP_URL") . '/api/images/', '', $avatarUrl);
+
+        $response = $this->get("/api/images/{$imagePathWithPlus}");
+
+        $response->assertStatus(200)
+            ->assertHeader('Content-Type', 'image/png');
     }
 }
