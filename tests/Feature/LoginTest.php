@@ -76,24 +76,20 @@ class loginTest extends TestCase
                     email: user1@gmail.com
                     image_url: http://picture/user1
                     password: password
-               customer2
-                    name: user2
-                    email: user2@gmail.com
-                    image_url: http://picture/user2
            1. When customer login with
-               email: user1@gmail.com
-               password: password
+                email: user1@gmail.com
+                password: password
               Then login success and be customer
            2. When customer login with
-               email: user1
-               password: password
-               that wrong email format
+                email: user1
+                password: password
+                that wrong email format
               Then login not success
-           3. When customer login with google authenticate
-               name: user2
-               email: user2@gmail.com
-               image_url: http://picture/user2
-              Then login success
+           3. When customer login with
+                email: user1@gmail.com
+                password: password123
+                that wrong password
+              Then login not success
    */
 
     public function test_customer_login_successfully()
@@ -115,14 +111,13 @@ class loginTest extends TestCase
         $response->assertStatus(422);
     }
 
-    public function test_customer_login_successfully_with_google_authentication()
+    public function test_customer_login_successfully_with_wrong_password()
     {
-        $response = $this->post('/api/auth/google/login', [
-            'name' => 'user2',
-            'email' => 'user2@gmail.com',
-            'image_url' => 'http://picture/user2'
+        $response = $this->post('/api/auth/login', [
+            'email' => 'user1@gmail.com',
+            'password' => 'password123'
         ]);
-        $response->assertStatus(201);
+        $response->assertStatus(401);
     }
 
     /*
@@ -160,21 +155,45 @@ class loginTest extends TestCase
 
     public function test_shop_can_not_login_successfully_with_no_existing_email()
     {
-       $response = $this->post('/api/auth/login', [
-           'email' => 'starbuc@gmail.com',
-           'password' => 'password'
-       ]);
-       $response->assertStatus(404);
+        $response = $this->post('/api/auth/login', [
+            'email' => 'starbuc@gmail.com',
+            'password' => 'password'
+        ]);
+        $response->assertStatus(404);
     }
 
-    public  function test_shop_can_not_login_successfully_with_wrong_email_format()
+    public function test_shop_can_not_login_successfully_with_wrong_email_format()
     {
-       $response = $this->post('/api/auth/login', [
-           'email' => 'starbuck@.com',
-           'password' => 'password'
-       ]);
-       $response->assertStatus(422);
+        $response = $this->post('/api/auth/login', [
+            'email' => 'starbuck@.com',
+            'password' => 'password'
+        ]);
+        $response->assertStatus(422);
     }
 
+    /*
+    TODO: 4. User Story: Customer Single Sign On Login
+        Acceptance Criteria:
+            Given user in database which has
+                customer1:
+                    name: user1
+                    email: user1@gmail.com
+                    image_url: http://picture/user1
+            1. When customer login with
+                name: user1
+                email: user1@gmail.com
+                image_url: http://picture/user1
+               Then login success and be customer
+    */
+
+    public function test_customer_login_successfully_with_google_authentication() {
+        $response = $this->post('/api/auth/google/login', [
+            'name' => 'user2',
+            'email' => 'user2@gmail.com',
+            'image_url' => 'image_url: http://picture/user1'
+        ]);
+        $data = $response->json()['data'];
+        $this->assertEquals("CUSTOMER", $data['role']);
+    }
 
 }
