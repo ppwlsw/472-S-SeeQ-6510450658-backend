@@ -190,8 +190,8 @@ class CreateQueueTest extends TestCase
             $createData
         );
 
-        $this->expectException(\Illuminate\Database\UniqueConstraintViolationException::class);
         $response = $this->queueController->store($request);
+        $this->assertEquals("This name is already in use" , $response->getData()->message);
     }
 
     protected function tearDown(): void
